@@ -1,0 +1,61 @@
+[
+{
+  "model": "analyzer.currency",
+  "pk": "CNY",
+  "fields": {
+    "num": 156,
+    "name": "Yuan Renminbi",
+    "name_rus": "Китайский юань",
+    "symbol": "CNY",
+    "id": "R01375",
+    "auto_rate_preload": true
+  }
+},
+{
+  "model": "analyzer.currency",
+  "pk": "EUR",
+  "fields": {
+    "num": 978,
+    "name": "Euro",
+    "name_rus": "Евро",
+    "symbol": "€",
+    "id": "R01239",
+    "auto_rate_preload": true
+  }
+},
+{
+  "model": "analyzer.currency",
+  "pk": "JPY",
+  "fields": {
+    "num": 392,
+    "name": "Yen",
+    "name_rus": "Японских иен",
+    "symbol": "¥",
+    "id": "R01820",
+    "auto_rate_preload": false
+  }
+},
+{
+  "model": "analyzer.currency",
+  "pk": "RUB",
+  "fields": {
+    "num": 643,
+    "name": "Russian ruble",
+    "name_rus": "Российский рубль",
+    "symbol": "₽",
+    "auto_rate_preload": false
+  }
+},
+{
+  "model": "analyzer.currency",
+  "pk": "USD",
+  "fields": {
+    "num": 840,
+    "name": "US Dollar",
+    "name_rus": "Доллар США",
+    "symbol": "$",
+    "id": "R01235",
+    "auto_rate_preload": true
+  }
+}
+]

@@ -1,0 +1,11 @@
+{% include "base.html" %}
+
+{% block content %}
+<h1 class="text-4xl px-5 py-6">Список операций</h1>
+
+<div id="opertionsListContainer" class="min-w-full text-sm">
+{% include 'analyzer/operations_list.html' %}
+</div>
+
+&nbsp;
+{% endblock %}

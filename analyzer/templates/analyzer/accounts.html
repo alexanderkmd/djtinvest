@@ -1,0 +1,28 @@
+{% include "base.html" %}
+
+{% block content %}
+<h1>Счета</h1>
+
+
+
+{% for account in accounts %}
+{{account}}
+<div class="flex content-center min-h-8">
+    <div class="w-64">{{account.name}}</div>
+    <div class="w-16">{{account.bank}}</div>
+    <div class="w-32">
+        <a href='{% url "analyzer:account_positions_update" account.pk %}'>
+            Обновить портфолио</a>
+    </div>
+    <div class="w-32">
+        <a href='{% url "analyzer:account_operations_update" account.pk %}'>
+            Обновить операции</a>
+    </div>
+    <div class="w-32">Обновить что-то?</div>
+    <div class="w-24">Баланс?</div>
+    <div class="w-64">{{account.type}}</div>
+    <div class="w-32">{{account.status}}</div>
+</div>
+{% endfor %}
+
+{% endblock %}

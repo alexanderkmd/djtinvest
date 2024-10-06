@@ -1,0 +1,25 @@
+
+Ticker	Date	Value	Tax	Value RUB
+
+{% for operation in operations %}
+<div class="flex content-center min-h-8">
+    <div class="w-24">{{operation.timestamp|date:"Y-m-d" }}</div> 
+    {% if operation.figi != "" %}
+    <a href="{% url 'analyzer:positionDetail' operation.figi %}" class="flex">
+    {% endif %}
+    <div class="w-10">
+        <img src="{{operation.instrument.icon_url}}" width="32px">
+    </div>
+    <div class="w-40">{{operation.ticker}}</div>
+    {% if operation.figi != "" %}
+    </a>
+    {% endif %}
+    <div class="w-40">{{operation.figi}}</div>
+    <div class="w-40">{{operation.payment|floatformat:"2"}} {{operation.currency}}</div> 
+    <div class="w-40">{{operation.payment_rub|floatformat:"2"}} rub</div> 
+    <div class="w-24">{{operation.pk}}</div>
+    <div>{{operation.type }}</div>
+    <!--div class="w-40">{{operation.figi}}</div--> 
+    <!--div class="w-40">{{operation.price_rub|floatformat:"2"}} rub</div--> 
+</div>
+{% endfor %}

@@ -1,0 +1,27 @@
+{% for operation in operations %}
+<div class="flex content-center min-h-8 px-6
+{% if operation.is_canceled %}line-through{% endif %}
+">
+    <div class="w-8 text-2xs">{{operation.pk}}</div>
+    {% if operation.figi != "" %}
+    <a href="{% url 'analyzer:positionDetail' operation.figi %}" class="flex">
+    {% endif %}
+    <div class="w-10">
+        <img src="{{operation.instrument.icon_url}}" width="32px">
+    </div>
+    <div class="w-32">{{operation.ticker}}</div>
+    {% if operation.figi != "" %}
+    </a>
+    {% endif %}
+    <div class="w-20 text-right">{{operation.quantity}}</div> 
+    <div class="w-40 text-right">{{operation.price|floatformat:"2"}} {{operation.currency}}</div> 
+    <div class="w-40 text-right">{{operation.payment|floatformat:"2"}} {{operation.currency}}</div> 
+    <div class="w-40 text-right">{{operation.payment_rub|floatformat:"2"}} rub</div> 
+    <div class="w-48 px-2 text-xs">{{operation.account.name }}</div> 
+    <div class="w-48">{{operation.timestamp }}</div> 
+    <div>{{operation.type }}</div>
+</div>
+{% endfor %}
+
+<div {% if operations.has_next %} hx-get="?page={{ operations.next_page_number }}" hx-trigger="revealed"
+hx-swap="outerHTML" {% endif %}></div>
