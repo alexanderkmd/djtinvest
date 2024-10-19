@@ -41,8 +41,25 @@ class tinkoff_client():
 
         return result.instrument
 
+    def get_instrument_by_ticker(self, ticker: str,  class_code: str) -> Instrument:
+        """Ищет инструмент по ticker, но данные не полные
+
+        Args:
+            ticker (str): ticker
+            class_code (str): trading class code
+
+        Returns:
+            Instrument: data
+        """
+        tlogger.info(f"TClient - get instrument {ticker}")
+        with Client(self.TOKEN) as client:
+            result = client.instruments.get_instrument_by(id=ticker,
+                                                          id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_TICKER,
+                                                          class_code=class_code)
+        return result.instrument
+
     def get_instrument_by_uid(self, uid: str) -> Instrument:
-        """Ищет инструмент по figi, но данные не полные
+        """Ищет инструмент по uid, но данные не полные
 
         Args:
             uid (str): _description_

@@ -243,16 +243,25 @@ class InstrumentManager(models.Manager):
         instrumentLogger.info(f"Find instrument {figi} in DB")
         return self._get_instrument(figi, "figi")
 
+    def get_instrument_by_ticker(self, ticker: str, class_code: str):
+        # идентификация инструментов в Т-Инвестициях:
+        # https://russianinvestments.github.io/investAPI/faq_identification/
+        instrumentLogger.info(f"Find instrument {ticker}:{class_code} in DB")
+        return self._get_instrument(ticker, "ticker", class_code)
+
     def get_instrument_by_uid(self, uid: str):
         # идентификация инструментов в Т-Инвестициях:
         # https://russianinvestments.github.io/investAPI/faq_identification/
         instrumentLogger.info(f"Find instrument {uid} in DB")
         return self._get_instrument(uid, "uid")
 
-    def _get_instrument(self, id: str, idType: str):
+    def _get_instrument(self, id: str, idType: str, class_code: str = ""):
         instrumentLogger.info(f"Find instrument by {idType} - {id} in DB")
         try:
-            tmpInst = self.get(idValue=id, idType=idType)
+            search_id = id
+            if class_code != "":
+                search_id += ":" + class_code
+            tmpInst = self.get(idValue=search_id, idType=idType)
         except ObjectDoesNotExist:
             instrumentLogger.info(f"Instrument {id} not found in DB - getting from API")
             tmpInst = None
@@ -266,6 +275,8 @@ class InstrumentManager(models.Manager):
 
         if idType == "figi":
             instrumentData = tasks.get_instrument_by_figi(id)
+        elif idType == "ticker":
+            instrumentData = tasks.get_instrument_by_ticker(id, class_code)
         elif idType == "uid":
             instrumentData = tasks.get_instrument_by_uid(id)
         return instrumentData
@@ -281,6 +292,7 @@ class Instrument(models.Model):
 
     objects = InstrumentManager()
     get_instrument = objects.get_instrument
+    get_instrument_by_ticker = objects.get_instrument_by_ticker
     get_instrument_by_uid = objects.get_instrument_by_uid
 
     class Meta:

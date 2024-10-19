@@ -82,6 +82,12 @@ def get_instrument_by_figi(figi: str):
     return _process_instrument(instrument_in)
 
 
+def get_instrument_by_ticker(ticker: str, class_code: str):
+    taskLogger.debug(f"Get instrument by ticker {ticker}")
+    instrument_in = tinkoff_client.get_instrument_by_ticker(ticker, class_code)
+    return _process_instrument(instrument_in)
+
+
 def get_instrument_by_uid(uid: str):
     taskLogger.debug(f"Get instrument by uid {uid}")
     instrument_in = tinkoff_client.get_instrument_by_uid(uid)
@@ -119,6 +125,12 @@ def _put_instrument_ids(instrument):
     models.Instrument.objects.update_or_create(
         idType="isin",
         idValue=instrument.isin,
+        defaults={"instrumentData": instrument}
+    )
+    taskLogger.debug(f"Putting ticker {instrument.ticker}")
+    models.Instrument.objects.update_or_create(
+        idType="ticker",
+        idValue=instrument.ticker + ":" + instrument.class_code,
         defaults={"instrumentData": instrument}
     )
     taskLogger.debug(f"Putting uid {instrument.uid}")
