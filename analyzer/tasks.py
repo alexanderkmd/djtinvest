@@ -153,15 +153,20 @@ def get_lastprice_from_api(figi_in: str | list[str]):
         figi = list(figi_in)
     prices = tinkoff_client.get_lastprice(figi)
     for price in prices:
-        tmpLp = models.last_price_from_tinkoff_client(price)
+        updated = models.LastPrice.objects.filter(figi=price.figi).update(
+            instrument_uid=price.instrument_uid,
+            price=Quotation(price.price).to_decimal(),
+            timestamp=price.time,
+            last_price_type=price.last_price_type.name
+        )
+        if updated == 0:
+            tmpLp = models.last_price_from_tinkoff_client(price)
+            tmpLp.save()
 
-        try:
-            lp = models.LastPrice.objects.get(figi=tmpLp.figi)
-            tmpLp.pk = lp.pk
-            tmpLp.save()
-        except models.LastPrice.DoesNotExist:
-            tmpLp.save()
-    return tmpLp
+        cache_key = f"last_price_{price.figi}"
+        cache.set(cache_key, Quotation(price.price).to_decimal(), 60)
+    # возвращаем сведения о последнем/единственном инструменте
+    return models.LastPrice.objects.get(figi=price.figi)
 
 
 def get_share_by_figi(figi: str):
