@@ -117,6 +117,9 @@ def _process_instrument(instrument_in):
 
 def _put_instrument_ids(instrument):
     taskLogger.debug(f"Updating ids for {instrument}")
+    taskLogger.debug(f"Remove old ids for {instrument}")
+    models.Instrument.objects.filter(instrumentData=instrument).delete()
+
     taskLogger.debug(f"Putting figi {instrument.figi}")
     models.Instrument.objects.update_or_create(
         idType="figi",
