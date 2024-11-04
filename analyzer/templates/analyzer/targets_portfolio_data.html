@@ -1,0 +1,12 @@
+
+<b>Цель (капитал): </b> {{portfolio.targetPrice}}<br/>
+<b>Текущая стоимость: </b> ??<br/>
+<b>Достижение цели: </b> ??%<br/>
+изменение за неделю/месяц/год<br/>
+
+<b>Включенные счета:</b><br/>
+<ul>
+{% for account in portfolio.accounts.all %}
+    <li>{{account}}</li>
+{% endfor %}
+</ul>

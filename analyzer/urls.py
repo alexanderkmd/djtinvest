@@ -19,4 +19,8 @@ urlpatterns = [
     path("positions", views.PositionsView.as_view(), name="positions"),
     path("position/<str:figi>", views.PositionDetailView, name="positionDetail"),
     path("position/", views.PositionDetailView, name="positionDetail"),
+
+    path("targets", views.TargetsView, name="targets"),
+    path("targets/<int:portfolio_pk>", views.TargetsDetailView, name="targetDetails"),
+    path("target/positions/<int:portfolio_pk>", views.TargetPortfolioPositions, name="targetPositions"),
 ]

@@ -1,0 +1,25 @@
+{% include "base.html" %}
+
+{% block content %}
+<h1 class="text-4xl px-5 py-6">Целевой портфель "{{ portfolio.name }}"</h1>
+
+<br/>
+<div class="content-center min-h-8 px-6">
+    {% include "analyzer/targets_portfolio_data.html" %}
+</div>
+
+<div id="targetsContainer" class="min-w-full flex flex-row">
+    <div class="basis-* flex content-center min-h-8 px-6">
+        <div id="targetsPositionsContainer" hx-get="{% url 'analyzer:targetPositions' portfolio.pk %}"  
+        hx-trigger="load">
+
+            Загружаем список целевых пунктов. много их. Спиннер добавить.
+        </div>
+    </div>
+
+</div>
+
+
+
+&nbsp;
+{% endblock %}

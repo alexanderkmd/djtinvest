@@ -1,0 +1,23 @@
+{% include "base.html" %}
+
+{% block content %}
+<h1 class="text-4xl px-5 py-6">Цели и портфели</h1>
+
+<div id="targetsContainer" class="min-w-full">
+    <div>
+        <p>
+            Список портфелей: стоимость, цель и выполнение цели %, изменение за неделю/месяц/год
+        </p>
+    </div>
+    <div>
+        {% for portfolio in portfolios %}
+            portfolio}} - <a href="{% url 'analyzer:targetDetails' portfolio.pk %}">{{ portfolio.name }}</a>  
+            <br/>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+&nbsp;
+{% endblock %}

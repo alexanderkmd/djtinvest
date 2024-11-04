@@ -4,7 +4,7 @@ from django.urls import path, reverse
 # https://docs.djangoproject.com/en/5.1/ref/contrib/admin/#reversing-admin-urls
 from django.utils.html import format_html
 from .models import (Account, CentrobankRate, Currency, Instrument, InstrumentData,
-                     LastPrice, Operation, Position, Split)
+                     LastPrice, Operation, Position, Split, TargetPortfolio, TargetPortfolioValues)
 
 
 @admin.register(Account)
@@ -100,3 +100,15 @@ class PositionAdmin(admin.ModelAdmin):
 class SplitAdmin(admin.ModelAdmin):
     list_display = ["date", "ticker", "before", "after"]
     ordering = ["-date"]
+
+
+class TargetPortfolioValuesInline(admin.TabularInline):
+    model = TargetPortfolioValues
+    extra = 1
+    fields = ["order_number", "instrument", "indexTarget", "coefficient"]
+
+
+@admin.register(TargetPortfolio)
+class TargetPortfolioAdmin(admin.ModelAdmin):
+    list_display = ["name", "targetPrice"]
+    inlines = [TargetPortfolioValuesInline]

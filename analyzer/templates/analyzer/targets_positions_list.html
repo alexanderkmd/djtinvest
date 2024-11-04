@@ -1,0 +1,121 @@
+<table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+    <thead class="text-xs text-gray-700 uppercase sticky bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+            <th scope="col" class="px-6 py-3 min-w-60">
+                Позиция
+            </th>
+            <th scope="col" class="px-6 py-3">
+                Вес в индексе * коэффициент 
+            </th>
+            <!--th scope="col" class="px-6 py-3">
+                Коэф-т
+            </th-->
+            <th scope="col" class="px-6 py-3">
+                Мой Вес <small>(нормализовано)</small>
+            </th>
+            <th scope="col" class="px-6 py-3">
+                Цена <small>(за шт.)</small>
+            </th>
+            <!--th scope="col" class="px-6 py-3">
+                Див.дох.
+            </th-->
+            <th scope="col" class="px-6 py-3">
+                Акций Купить,<br/>Стоимость<br/><span class="text-2xs">(нормализовано по тек.ценам)</span>
+            </th>
+            <!--th scope="col" class="px-6 py-3">
+                Стоимость (нормализовано)
+            </th-->
+            <th scope="col" class="px-6 py-3">
+                Куплено акций,<br/>Стоимость<br/>
+            </th>
+            <!--th scope="col" class="px-6 py-3">
+                Куплено стоимость позиции
+            </th-->
+            <th scope="col" class="px-6 py-3">
+                % готово
+            </th>
+            <th scope="col" class="px-6 py-3">
+                Сектор
+            </th>
+            <!--th scope="col" class="px-6 py-3">
+                Дивиденд на акцию
+            </th>
+            <th scope="col" class="px-6 py-3">
+                Див/год ожидаемый (без вычета налога)
+            </th>
+            <th scope="col" class="px-6 py-3">
+                Целевой див.
+            </th-->
+        </tr>
+    </thead>
+    <tbody>
+
+        {% for position in positions %}
+        <tr>
+            <td class="py-2">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10">
+                  <img class="h-10 w-10 rounded-full"   src="{{position.instrument.icon_url}}" alt="">
+                </div>
+                <div class="ml-4"><a href="#">
+                  <div class="text-sm font-medium text-gray-900 max-w-64 overflow-hidden">{{position.order_number}} - {{position.instrument.name}}</div>
+                  <div class="text-sm text-gray-500">{{position.instrument.ticker}} - {{position.instrument.figi}}</div>
+                  </a>
+                </div>
+              </div>
+            </td>
+            
+            <td class="text-right">
+                {{position.indexTarget|floatformat:"2"}}
+                &nbsp;*&nbsp;{{position.coefficient}}
+            </td>
+            <td class="text-center">
+                {{position.my_weight}}
+                <div class="text-2xs">
+                    Соответствие: {{position.index_correlation|floatformat:"2"}}
+                </div>
+            </td>
+            <td class="text-right">
+                {{position.current_price|floatformat:"2"}}
+                <br/><span class="text-2xs">(Лот: {{position.instrument.lot}})</span>
+            </td>
+
+            <!--td>див.доход</td-->
+
+            <td class="text-right">
+                {{position.to_buy_qtty}}
+                <span class="text-left text-2xs w-[50px] inline-block text-gray-500">
+                    &nbsp;
+                </span>
+                <br/>
+                {{position.to_buy_price|floatformat:"2"}}
+                <span class="text-left text-2xs w-[50px] inline-block">
+                    руб.
+                </span>
+            </td>
+            <!-- td class="text-right">{{position.to_buy_price|floatformat:"2"}}</td -->
+
+            <td class="text-right">
+                {{position.bought_qtty}}
+                <span class="text-left text-2xs w-[50px] inline-block text-gray-500">
+                    &nbsp;
+                </span>
+                <br/>
+                {{position.bought_price|floatformat:"2"}}
+                <span class="text-left text-2xs w-[50px] inline-block">
+                    руб.
+                </span>
+            </td>
+            <!-- td class="text-right">{{position.bought_price|floatformat:"2"}}</td-->
+            <td class="text-right">{{position.percent_complete}}%</td>
+            <td>{{position.instrument.sector}}</td>
+            <!--td>див на акцию</td>
+            <td>див год</td>
+            <td>Целевой див.</td-->
+
+
+        </tr>
+        {% endfor %}
+
+    </tbody>
+</table>    

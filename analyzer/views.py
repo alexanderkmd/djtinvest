@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.template import loader
 from django.views import generic
 
-from .models import Account, Operation, Position, PortfolioPosition
+from .models import Account, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
 from .utils import is_htmx, paginate
 from . import tasks
 
@@ -118,4 +118,49 @@ def PositionDetailView(request, figi: str):
     context = {
         "position": position
     }
+    return HttpResponse(template.render(context, request))
+
+
+def TargetsView(request):
+    template = loader.get_template("analyzer/targets.html")
+
+    targetPortfolios = TargetPortfolio.objects.all()
+    context = {
+        "portfolios": targetPortfolios,
+        }
+
+    return HttpResponse(template.render(context, request))
+
+
+def TargetsDetailView(request, portfolio_pk):
+    template = loader.get_template("analyzer/targets_detail.html")
+
+    targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
+    context = {
+        "portfolio": targetPortfolio,
+        }
+
+    return HttpResponse(template.render(context, request))
+
+
+def TargetPortfolioPositions(request, portfolio_pk):
+    template = loader.get_template("analyzer/targets_positions_list.html")
+
+    targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
+    targetPositions = TargetPortfolioValues.objects.filter(
+        targetPortfolio__pk=portfolio_pk
+        ).select_related("targetPortfolio"
+        ).prefetch_related("instrument")
+
+    # запрос текущих цен бумаг одним запросом
+    figis = []
+    for item in list(targetPositions.values_list("instrument__uid")):
+        figis.append(item[0])
+    tasks.get_lastprice_from_api(figis)
+
+    context = {
+        "portfolio": targetPortfolio,
+        "positions": targetPositions,
+        }
+
     return HttpResponse(template.render(context, request))

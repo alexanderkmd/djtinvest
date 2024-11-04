@@ -1,8 +1,10 @@
 import logging
 
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -522,3 +524,120 @@ class Split(models.Model):
         verbose_name_plural = "Сплиты"
 
 
+##############################
+#          TARGETS           #
+##############################
+
+class TargetPortfolio(models.Model):
+    """Портфель целей и его название
+    """
+    name = models.CharField(max_length=64)
+    targetPrice = models.IntegerField(default=1000, verbose_name="Цель (капитал)")
+    accounts = models.ManyToManyField(Account)
+
+    def my_total_weight(self):
+        """Сумма скорректированных на коэффициент весов входящих в портфель"""
+        total_weight = tasks.total_weight_for_target_portfolio(self.pk)
+        return total_weight
+
+
+class TargetPortfolioValues(models.Model):
+    """Список целевых значений и весов для данного портфеля
+    """
+    # name = models.CharField(max_length=64)
+    targetPortfolio = models.ForeignKey(TargetPortfolio, on_delete=models.PROTECT)
+    order_number = models.IntegerField()
+    instrument = models.ForeignKey(InstrumentData, on_delete=models.PROTECT)
+    indexTarget = models.DecimalField(max_digits=9, decimal_places=7, verbose_name="Вес в индексе")
+    coefficient = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Мой коэффициент",
+                                      default=Decimal(1.0))
+
+    # TODO: индекс по уникальности - портфель/инструмент
+
+    def corrected_weight(self):
+        """Вес, скорректированный на коэффициент
+
+        Returns:
+            Decimal: десятичное число
+        """
+        if self.indexTarget == 0:
+            return self.coefficient
+        return self.indexTarget*self.coefficient
+
+    def my_weight(self) -> Decimal:
+        # тут должен быть скорректированный вес деленный
+        # на общий скорректированный вес
+        return Decimal(round(self.corrected_weight() / self.targetPortfolio.my_total_weight()*100, 2))
+
+    def index_correlation(self):
+        if self.indexTarget == 0:
+            return 0
+        return self.my_weight()/self.indexTarget
+
+    def current_price(self):
+        """Текущая стоимость данной позиции
+
+        Returns:
+            Decimal: стоимость позиции
+        """
+        cache_key = f"last_price_{self.instrument.figi}"
+        value = cache.get(cache_key)
+        if value is not None:
+            return value
+        return get_last_price(self.instrument.figi).price
+
+    def to_buy_qtty(self) -> int:
+        """Количество для закупки
+
+        Returns:
+            : количество бумаг, которое надо купить
+        """
+        # https://www.tutorialkart.com/python/python-round/python-round-to-nearest-10/
+        current_price = self.current_price()
+        if current_price == 0:
+            return 0
+        lots = self.instrument.lot
+        qtty = self.targetPortfolio.targetPrice * self.my_weight() / 100 / current_price
+        return round(qtty/lots)*lots
+
+    def to_buy_price(self):
+        """Стоимость для закупки
+
+        Returns:
+            : стоимость бумаг, которые надо купить
+        """
+        return self.to_buy_qtty() * self.current_price()
+
+    def bought_qtty(self) -> int:
+        """Количество купленного
+
+        Returns:
+            : количество уже купленных бумаг
+        """
+        cache_key = f"bought_qtty_{self.pk}"
+        cached_value = cache.get(cache_key)
+        if cached_value is not None:
+            return cached_value
+        qtty = Position.objects.filter(
+            account__in=self.targetPortfolio.accounts.all()).filter(
+                instrument=self.instrument).aggregate(models.Sum("quantity"))
+        instrumentLogger.info(qtty)
+        out = qtty['quantity__sum']
+        if out is None:
+            out = 0
+        cache.set(cache_key, out, 10)
+        return out
+
+    def bought_price(self):
+        """Стоимость купленных бумаг
+
+        Returns:
+            : Стоимость уже купленных бумаг
+        """
+        return self.bought_qtty() * self.current_price()
+
+    def percent_complete(self) -> int:
+        if self.to_buy_qtty() == 0:
+            return 100
+        result = round(self.bought_qtty() / self.to_buy_qtty() * 100)
+        return result

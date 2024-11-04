@@ -3,9 +3,11 @@ import logging
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from django.conf import settings
+from django.core.cache import cache
 from django.db.utils import IntegrityError
 from . import models  # import Account, Instrument, Operation
 from . import tclient, cbrf_client, moex_client
+from .classes import Quotation
 
 
 tinkoff_client = tclient.tinkoff_client(settings.TINKOFF_API_KEY)
@@ -232,6 +234,35 @@ def preload_splits_list_to_db():
         models.Split.objects.get_or_create(
             date=split["tradedate"], ticker=split['secid'],
             defaults={"before": split["before"], "after": split["after"]})
+
+
+def total_weight_for_target_portfolio(targetPortfolioId: int, use_cache=True):
+    """Расчет общего веса позиций в портфолио.
+    Учитывает вес в индексе, помноженный на коэффициент.
+    Если в индексе 0 - берет коэффициент как нужный вес.
+
+    Args:
+        targetPortfolioId (int): pk портфолио
+        use_cache (bool, optional): Использовать ли кэширования при пересчетах.
+
+    Returns:
+        _type_: _description_
+    """
+    cache_key = f"total_weight_for_portfolio_{targetPortfolioId}"
+    cached_value = cache.get(cache_key)
+    if use_cache and cached_value is not None:
+        taskLogger.debug("Used cache for total_weight")
+        return cached_value
+    portfolioValues = models.TargetPortfolioValues.objects.filter(targetPortfolio__pk=targetPortfolioId)
+    total_weight = 0
+    for portfolioValue in portfolioValues:
+        if portfolioValue.indexTarget == 0:
+            total_weight += portfolioValue.coefficient
+        else:
+            weight = portfolioValue.indexTarget * portfolioValue.coefficient
+            total_weight += weight
+    cache.set(cache_key, total_weight, 5)
+    return total_weight
 
 
 def update_all_accounts():
