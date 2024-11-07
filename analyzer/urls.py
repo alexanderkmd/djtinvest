@@ -23,6 +23,10 @@ urlpatterns = [
     path("targets", views.TargetsView, name="targets"),
     path("targets/<int:portfolio_pk>", views.TargetsDetailView, name="targetDetails"),
     path("target/positions/<int:portfolio_pk>", views.TargetPortfolioPositions, name="targetPositions"),
+    path("target/position/<int:position_pk>", views.TargetPortfolioPositionItem,
+         name="targetPositionItem"),
+    path("target/position/<int:position_pk>/<int:toggle_update>", views.TargetPortfolioPositionItem,
+         name="targetPositionItem"),
     path("target/position/<int:position_pk>/set_coefficient", views.TargetPositionSetCoefficient,
          name="positionCoefficientSet"),
 ]

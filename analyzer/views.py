@@ -169,11 +169,44 @@ def TargetPortfolioPositions(request, portfolio_pk):
     return HttpResponse(template.render(context, request))
 
 
-def TargetPositionSetCoefficient(request, position_pk:int):
+def TargetPortfolioPositionItem(request, position_pk: int, toggle_update=False):
+    """Рендерит ряд с позицией Целевого портфеля
+
+    Args:
+        position_pk (int): pk позиции
+        toggle_update (bool, optional): Отправлять ли запрос на обновление всей таблицы. Defaults to False.
+
+    Обновление всей таблицы требуется, например, при пересчете весов или изменения размера портфеля.
+    """
+    template = loader.get_template("analyzer/targets_position_item.html")
+
+    targetPosition = TargetPortfolioValues.objects.filter(
+        pk=position_pk
+        ).select_related(
+            "targetPortfolio"
+        ).prefetch_related("instrument")[0]
+
+    # запрос текущих цен бумаг одним запросом
+    tasks.target_portfolio_preload_last_prices(targetPosition.targetPortfolio.pk)
+
+    context = {
+        "position": targetPosition,
+        }
+
+    response = HttpResponse(template.render(context, request))
+    if toggle_update:
+        response['HX-Trigger'] = "tableReload"
+    return response
+
+
+def TargetPositionSetCoefficient(request, position_pk: int):
     logging.info(request.POST.keys())
     new_coeff = request.POST.get("coefficient", "1.0")
     position = TargetPortfolioValues.objects.get(pk=position_pk)
     position.coefficient = Decimal(new_coeff.replace(",", "."))
     logging.info(f"{new_coeff}, {position.coefficient}, {new_coeff.replace('',', ''.')}")
     position.save()
-    return redirect(reverse("analyzer:targetPositions", kwargs={"portfolio_pk": position.targetPortfolio.pk}))
+    # Пересчет общего веса целевого портфеля
+    tasks.target_portfolio_total_weight(position.targetPortfolio.pk, False)
+    return redirect(reverse("analyzer:targetPositionItem", kwargs={"position_pk": position.pk,
+                                                                   "toggle_update": 1}))
