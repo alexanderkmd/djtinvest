@@ -1,10 +1,10 @@
 <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-    <thead class="text-xs text-gray-700 uppercase sticky bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <thead class="text-xs text-gray-700 uppercase sticky top-16 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
-            <th scope="col" class="px-6 py-3 min-w-60">
+            <th scope="col" class="px-6 py-3 min-w-60 sticky left-0">
                 Позиция
             </th>
-            <th scope="col" class="px-6 py-3">
+            <th scope="col" class="px-6 py-3 max-w-64 text-center">
                 Вес в индексе * коэффициент 
             </th>
             <!--th scope="col" class="px-6 py-3">
@@ -37,7 +37,7 @@
             <th scope="col" class="px-6 py-3">
                 Сектор
             </th>
-            <!--th scope="col" class="px-6 py-3">
+            <th scope="col" class="px-6 py-3">
                 Дивиденд на акцию
             </th>
             <th scope="col" class="px-6 py-3">
@@ -45,14 +45,14 @@
             </th>
             <th scope="col" class="px-6 py-3">
                 Целевой див.
-            </th-->
+            </th>
         </tr>
     </thead>
     <tbody>
 
         {% for position in positions %}
-        <tr>
-            <td class="py-2">
+        <tr class="hover:bg-gray-300">
+            <td class="py-2 sticky left-0 bg-white bg-opacity-100">
               <div class="flex items-center">
                 <div class="flex-shrink-0 h-10 w-10">
                   <img class="h-10 w-10 rounded-full"   src="{{position.instrument.icon_url}}" alt="">
@@ -64,10 +64,15 @@
                 </div>
               </div>
             </td>
-            
-            <td class="text-right">
+
+            <td class="text-center">
+                <form id="coeff-form-{{position.pk}}" hx-post="{% url 'analyzer:positionCoefficientSet' position.pk %}" hx-target="#targetsPositionsContainer" hx-swap="innerHTML">
+                {% csrf_token %}
                 {{position.indexTarget|floatformat:"2"}}
-                &nbsp;*&nbsp;{{position.coefficient}}
+                &nbsp;*&nbsp;
+                <input type="text" id="coefficient" name="coefficient" class="inline block w-12 p-2 text-gray-900 border border-white bg-white bg-opacity-0 text-xs focus:ring-blue-500 focus:border-blue-500"
+                    value="{{position.coefficient}}">
+                </form>
             </td>
             <td class="text-center">
                 {{position.my_weight}}
@@ -107,7 +112,7 @@
                 </span>
             </td>
             <!-- td class="text-right">{{position.bought_price|floatformat:"2"}}</td-->
-            <td class="text-right">{{position.percent_complete}}%</td>
+            <td class="text-right px-5">{{position.percent_complete}}%</td>
             <td>{{position.instrument.sector}}</td>
             <!--td>див на акцию</td>
             <td>див год</td>

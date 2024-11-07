@@ -244,7 +244,24 @@ def preload_splits_list_to_db():
             defaults={"before": split["before"], "after": split["after"]})
 
 
-def total_weight_for_target_portfolio(targetPortfolioId: int, use_cache=True):
+def target_portfolio_preload_last_prices(targetPortfolioId: int, use_cache=True):
+    cache_key = f"price_preload_for_portfolio_{targetPortfolioId}_complete"
+    if cache.get(cache_key) is not None:
+        return
+    targetPositions = models.TargetPortfolioValues.objects.filter(
+        targetPortfolio__pk=targetPortfolioId
+        ).select_related("targetPortfolio"
+        ).prefetch_related("instrument")
+
+    # запрос текущих цен бумаг одним запросом
+    figis = []
+    for item in list(targetPositions.values_list("instrument__uid")):
+        figis.append(item[0])
+    get_lastprice_from_api(figis)
+    cache.set(cache_key, True, 30)
+
+
+def target_portfolio_total_weight(targetPortfolioId: int, use_cache=True):
     """Расчет общего веса позиций в портфолио.
     Учитывает вес в индексе, помноженный на коэффициент.
     Если в индексе 0 - берет коэффициент как нужный вес.
@@ -271,6 +288,28 @@ def total_weight_for_target_portfolio(targetPortfolioId: int, use_cache=True):
             total_weight += weight
     cache.set(cache_key, total_weight, 5)
     return total_weight
+
+
+def target_portfolio_total_value(targetPortfolioId: int, use_cache=True):
+    """Расчет общей стоимости позиций в портфолио.
+
+    Args:
+        targetPortfolioId (int): pk портфолио
+        use_cache (bool, optional): Использовать ли кэширования при пересчетах.
+
+    Returns:
+        _type_: _description_
+    """
+    cache_key = f"total_value_for_portfolio_{targetPortfolioId}"
+    cached_value = cache.get(cache_key)
+    if use_cache and cached_value is not None:
+        return cached_value
+    portfolioValues = models.TargetPortfolioValues.objects.filter(targetPortfolio__pk=targetPortfolioId)
+    total_value = 0
+    for portfolioValue in portfolioValues:
+        total_value += portfolioValue.bought_price()
+    cache.set(cache_key, total_value, 10)
+    return total_value
 
 
 def update_all_accounts():

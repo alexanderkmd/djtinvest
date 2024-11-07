@@ -1,12 +1,17 @@
-
-<b>Цель (капитал): </b> {{portfolio.targetPrice}}<br/>
-<b>Текущая стоимость: </b> ??<br/>
-<b>Достижение цели: </b> ??%<br/>
-изменение за неделю/месяц/год<br/>
-
-<b>Включенные счета:</b><br/>
-<ul>
-{% for account in portfolio.accounts.all %}
-    <li>{{account}}</li>
-{% endfor %}
-</ul>
+<div class="flex py-2">
+    <div class="flex-1">
+        <b>Цель (капитал): </b> {{portfolio.targetPrice}}<br/>
+        <b>Текущая стоимость: </b> {{portfolio.total_value|floatformat:"0"}}<br/>
+        <b>Достижение цели: </b> {{portfolio.completed|floatformat:"2"}} %<br/>
+    </div>
+    <div class="flex-1"></div>
+    <!--изменение за неделю/месяц/год<br/-->
+    <div class="flex-1">
+        <b>Включенные счета:</b><br/>
+        <ul>
+        {% for account in portfolio.accounts.all %}
+            <li>{{account}}</li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>

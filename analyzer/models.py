@@ -537,8 +537,18 @@ class TargetPortfolio(models.Model):
 
     def my_total_weight(self):
         """Сумма скорректированных на коэффициент весов входящих в портфель"""
-        total_weight = tasks.total_weight_for_target_portfolio(self.pk)
+        total_weight = tasks.target_portfolio_total_weight(self.pk)
         return total_weight
+
+    def total_value(self):
+        """Стоимость всех активов в портфеле"""
+        total_value = tasks.target_portfolio_total_value(self.pk)
+        return total_value
+
+    def completed(self):
+        if self.targetPrice == 0:
+            return 0
+        return self.total_value() / self.targetPrice * 100
 
 
 class TargetPortfolioValues(models.Model):
@@ -634,7 +644,13 @@ class TargetPortfolioValues(models.Model):
         Returns:
             : Стоимость уже купленных бумаг
         """
-        return self.bought_qtty() * self.current_price()
+        cache_key = f"bought_price_{self.pk}"
+        cached_value = cache.get(cache_key)
+        if cached_value is not None:
+            return cached_value
+        out = self.bought_qtty() * self.current_price()
+        cache.set(cache_key, out, 10)
+        return out
 
     def percent_complete(self) -> int:
         if self.to_buy_qtty() == 0:

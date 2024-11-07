@@ -1,8 +1,13 @@
+import logging
+
 from datetime import datetime, timedelta, timezone
+
+from decimal import Decimal
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.template import loader
+from django.urls import reverse
 from django.views import generic
 
 from .models import Account, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
@@ -134,6 +139,7 @@ def TargetsView(request):
 
 def TargetsDetailView(request, portfolio_pk):
     template = loader.get_template("analyzer/targets_detail.html")
+    tasks.target_portfolio_preload_last_prices(portfolio_pk)
 
     targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
     context = {
@@ -153,10 +159,7 @@ def TargetPortfolioPositions(request, portfolio_pk):
         ).prefetch_related("instrument")
 
     # запрос текущих цен бумаг одним запросом
-    figis = []
-    for item in list(targetPositions.values_list("instrument__uid")):
-        figis.append(item[0])
-    tasks.get_lastprice_from_api(figis)
+    tasks.target_portfolio_preload_last_prices(portfolio_pk)
 
     context = {
         "portfolio": targetPortfolio,
@@ -164,3 +167,13 @@ def TargetPortfolioPositions(request, portfolio_pk):
         }
 
     return HttpResponse(template.render(context, request))
+
+
+def TargetPositionSetCoefficient(request, position_pk:int):
+    logging.info(request.POST.keys())
+    new_coeff = request.POST.get("coefficient", "1.0")
+    position = TargetPortfolioValues.objects.get(pk=position_pk)
+    position.coefficient = Decimal(new_coeff.replace(",", "."))
+    logging.info(f"{new_coeff}, {position.coefficient}, {new_coeff.replace('',', ''.')}")
+    position.save()
+    return redirect(reverse("analyzer:targetPositions", kwargs={"portfolio_pk": position.targetPortfolio.pk}))
