@@ -210,3 +210,16 @@ def TargetPositionSetCoefficient(request, position_pk: int):
     tasks.target_portfolio_total_weight(position.targetPortfolio.pk, False)
     return redirect(reverse("analyzer:targetPositionItem", kwargs={"position_pk": position.pk,
                                                                    "toggle_update": 1}))
+
+
+def TargetPositionDelete(request, position_pk: int):
+
+    try:
+        position = TargetPortfolioValues.objects.get(pk=position_pk)
+        position.delete()
+    except Exception as e:
+        logging.error(f"Error deleting target position {position_pk}: {e}")
+        return HttpResponse(status=500)
+
+    response = HttpResponse(status=204)
+    return response

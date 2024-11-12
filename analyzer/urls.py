@@ -29,4 +29,6 @@ urlpatterns = [
          name="targetPositionItem"),
     path("target/position/<int:position_pk>/set_coefficient", views.TargetPositionSetCoefficient,
          name="positionCoefficientSet"),
+    path("target/position/delete/<int:position_pk>", views.TargetPositionDelete,
+         name="positionDelete"),
 ]

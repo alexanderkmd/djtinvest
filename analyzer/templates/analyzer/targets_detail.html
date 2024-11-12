@@ -20,6 +20,31 @@
 </div>
 
 
+<script>
+
+function positionDeleteConfirmation(position_pk, position_name) {
+  let text = "Подтвердите удаление позиции:\n" + position_name;
+  text += "\n\nДанное действие необратимо!"
+  if (confirm(text) == true) {
+    pre_url = "{% url 'analyzer:positionDelete' 1 %}";
+    url = pre_url.slice(0, -1) + String(position_pk);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    
+    xhr.onload = () => {
+        if (xhr.status == 204) {
+            row_id = "position-row-" + String(position_pk);
+            document.getElementById(row_id).remove(); // Удаляем строку из таблицы
+            htmx.trigger("body", "tableReload", {answer:42}); // Пересчитываем таблицу
+        }
+    };
+    
+    xhr.send(null);
+  }
+}
+
+</script>
 
 &nbsp;
 {% endblock %}

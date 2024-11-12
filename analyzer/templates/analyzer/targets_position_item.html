@@ -66,9 +66,12 @@
     <!-- td class="text-right">{{position.bought_price|floatformat:"2"}}</td-->
     <td class="text-right px-5">{{position.percent_complete}}%</td>
     <td>{{position.instrument.sector}}</td>
-    <!--td>див на акцию</td>
-    <td>див год</td>
-    <td>Целевой див.</td-->
+    <td><!-- див на акцию --></td>
+    <td><!-- див год --></td>
+    <td><!-- Целевой див. --></td>
+    <td>
+        <button onclick="positionDeleteConfirmation({{position.pk}}, '{{position.instrument.name}}')">Удалить</button>
+    </td>
 
 
 </tr>
