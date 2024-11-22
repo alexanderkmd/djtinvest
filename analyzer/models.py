@@ -531,9 +531,9 @@ class Split(models.Model):
 class TargetPortfolio(models.Model):
     """Портфель целей и его название
     """
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, verbose_name="Название")
     targetPrice = models.IntegerField(default=1000, verbose_name="Цель (капитал)")
-    accounts = models.ManyToManyField(Account)
+    accounts = models.ManyToManyField(Account, verbose_name="Включенные счета")
 
     def my_total_weight(self):
         """Сумма скорректированных на коэффициент весов входящих в портфель"""

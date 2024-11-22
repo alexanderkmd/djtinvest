@@ -7,6 +7,16 @@
     {% include "analyzer/targets_portfolio_data.html" %}
 </div>
 
+<div class="">
+    {% with modalIdT="targetEditmodalContainer" %}
+    <button data-modal-target="{{modalIdT}}" data-modal-toggle="targetEditmodalContainer" 
+            class="btn primary">Редактировать портфель</button> 
+    {% include 'analyzer/target_edit_modal_form.html' %}
+    {% endwith %}
+            | 
+    <a href="#">Добавить позицию в портфель</a> | <a href="#">Обновить состав индекса</a>
+</div>
+
 <div id="targetsContainer" class="min-w-full flex flex-row">
     <div class="basis-* flex content-center min-h-8 px-0 text-center">
         <div id="targetsPositionsContainer" hx-get="{% url 'analyzer:targetPositions' portfolio.pk %}"  

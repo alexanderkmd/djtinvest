@@ -22,6 +22,7 @@ urlpatterns = [
 
     path("targets", views.TargetsView, name="targets"),
     path("targets/<int:portfolio_pk>", views.TargetsDetailView, name="targetDetails"),
+    path("target/edit/<int:portfolio_pk>", views.TargetPortfolioEditView, name="targetEdit"),
     path("target/positions/<int:portfolio_pk>", views.TargetPortfolioPositions, name="targetPositions"),
     path("target/position/<int:position_pk>", views.TargetPortfolioPositionItem,
          name="targetPositionItem"),

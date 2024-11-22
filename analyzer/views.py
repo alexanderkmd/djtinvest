@@ -4,12 +4,13 @@ from datetime import datetime, timedelta, timezone
 
 from decimal import Decimal
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.urls import reverse
 from django.views import generic
 
+from .forms import TargetPortfolioForm
 from .models import Account, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
 from .utils import is_htmx, paginate
 from . import tasks
@@ -142,11 +143,25 @@ def TargetsDetailView(request, portfolio_pk):
     tasks.target_portfolio_preload_last_prices(portfolio_pk)
 
     targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
+    form = TargetPortfolioForm(instance=targetPortfolio)
     context = {
         "portfolio": targetPortfolio,
+        "form": form,
         }
 
     return HttpResponse(template.render(context, request))
+
+
+def TargetPortfolioEditView(request, portfolio_pk):
+    targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
+
+    form = TargetPortfolioForm(request.POST or None, instance=targetPortfolio)
+
+    if form.is_valid():
+        form.save()
+
+    return HttpResponseRedirect(reverse("analyzer:targetDetails",
+                                        kwargs={"portfolio_pk": portfolio_pk}))
 
 
 def TargetPortfolioPositions(request, portfolio_pk):

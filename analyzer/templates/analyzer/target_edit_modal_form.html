@@ -1,0 +1,24 @@
+
+{% extends 'modal.html' %}
+
+{% block modalId %}{{ modalIdT }}{% endblock %}
+{% block modalCloseId %}{{ modalIdT }}{% endblock %}
+
+{% block modalTitle %}Параметры целевого портфеля{% endblock %}
+                    
+{% block modalContent %}
+<form method="POST" action="{% url 'analyzer:targetEdit' portfolio.pk %}">
+    {% csrf_token %}
+    <!-- Modal body -->
+    <div class="p-4 md:p-5 space-y-4">
+        <div class="formGridTwoCols">
+            {{ form.as_div }}
+        </div>
+    </div>
+    <!-- Modal footer -->
+    <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b">
+        <button data-modal-hide="{{modalIdT}}" type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Сохранить</button>
+        <button data-modal-hide="{{modalIdT}}" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100">Отмена</button>
+    </div>
+</form>
+{% endblock %}
