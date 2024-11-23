@@ -143,10 +143,11 @@ def TargetsDetailView(request, portfolio_pk):
     tasks.target_portfolio_preload_last_prices(portfolio_pk)
 
     targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
-    form = TargetPortfolioForm(instance=targetPortfolio)
+    targetPortfolioConfigform = TargetPortfolioForm(instance=targetPortfolio)
+
     context = {
         "portfolio": targetPortfolio,
-        "form": form,
+        "portfolioConfigForm": targetPortfolioConfigform,
         }
 
     return HttpResponse(template.render(context, request))
