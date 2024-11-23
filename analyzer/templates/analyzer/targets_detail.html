@@ -9,7 +9,7 @@
 
 <div class="">
     {% with modalIdT="targetEditmodalContainer" %}
-    <button data-modal-target="{{modalIdT}}" data-modal-toggle="targetEditmodalContainer" 
+    <button data-modal-target="{{modalIdT}}" data-modal-toggle="{{modalIdT}}" 
             class="btn primary">Редактировать портфель</button> 
     {% include 'analyzer/target_edit_modal_form.html' %}
     {% endwith %}
