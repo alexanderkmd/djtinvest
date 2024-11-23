@@ -131,6 +131,10 @@ def TargetsView(request):
     template = loader.get_template("analyzer/targets.html")
 
     targetPortfolios = TargetPortfolio.objects.all()
+
+    for portfolio in targetPortfolios:
+        tasks.target_portfolio_preload_last_prices(portfolio.pk)
+
     context = {
         "portfolios": targetPortfolios,
         }
@@ -194,7 +198,8 @@ def TargetPortfolioPositions(request, portfolio_pk):
     targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
     targetPositions = TargetPortfolioValues.objects.filter(
         targetPortfolio__pk=portfolio_pk
-        ).select_related("targetPortfolio"
+        ).select_related(
+            "targetPortfolio"
         ).prefetch_related("instrument")
 
     # запрос текущих цен бумаг одним запросом

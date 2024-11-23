@@ -564,6 +564,9 @@ class TargetPortfolioValues(models.Model):
 
     # TODO: индекс по уникальности - портфель/инструмент
 
+    BOUGHT_QTTY_CACHE_TIMEOUT = 300  # Обновлять количество купленных бумаг раз в 5 минут
+    BOUGHT_PRICE_CACHE_TIMEOUT = 60  # Обновлять стоимость купленных бумаг раз в 1 минуту
+
     def corrected_weight(self):
         """Вес, скорректированный на коэффициент
 
@@ -635,7 +638,7 @@ class TargetPortfolioValues(models.Model):
         out = qtty['quantity__sum']
         if out is None:
             out = 0
-        cache.set(cache_key, out, 10)
+        cache.set(cache_key, out, self.BOUGHT_QTTY_CACHE_TIMEOUT)
         return out
 
     def bought_price(self):
@@ -649,7 +652,7 @@ class TargetPortfolioValues(models.Model):
         if cached_value is not None:
             return cached_value
         out = self.bought_qtty() * self.current_price()
-        cache.set(cache_key, out, 10)
+        cache.set(cache_key, out, self.BOUGHT_PRICE_CACHE_TIMEOUT)
         return out
 
     def percent_complete(self) -> int:

@@ -22,7 +22,7 @@
         {% csrf_token %}
         {{position.indexTarget|floatformat:"2"}}
         &nbsp;*&nbsp;
-        <input type="text" id="coefficient" name="coefficient" class="inline block w-12 p-2 text-gray-900 border border-white bg-white bg-opacity-0 text-xs focus:ring-blue-500 focus:border-blue-500"
+        <input type="text" id="coefficient" name="coefficient" class="inTableSmall"
             value="{{position.coefficient}}">
         </form>
     </td>

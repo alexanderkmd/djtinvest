@@ -157,6 +157,7 @@ def get_lastprice_from_api(figi_in: str | list[str]):
             instrument_uid=price.instrument_uid,
             price=Quotation(price.price).to_decimal(),
             timestamp=price.time,
+            updated=datetime.now(),  # workaround for "update_fields" feature
             last_price_type=price.last_price_type.name
         )
         if updated == 0:
@@ -250,7 +251,8 @@ def target_portfolio_preload_last_prices(targetPortfolioId: int, use_cache=True)
         return
     targetPositions = models.TargetPortfolioValues.objects.filter(
         targetPortfolio__pk=targetPortfolioId
-        ).select_related("targetPortfolio"
+        ).select_related(
+            "targetPortfolio"
         ).prefetch_related("instrument")
 
     # запрос текущих цен бумаг одним запросом
