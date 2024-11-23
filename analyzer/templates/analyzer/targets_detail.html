@@ -14,7 +14,12 @@
     {% include 'analyzer/target_edit_modal_form.html' %}
     {% endwith %}
             | 
-    <a href="#">Добавить позицию в портфель</a> | <a href="#">Обновить состав индекса</a>
+    <a href="#">Добавить позицию в портфель</a> |
+    {% with modalIdT="targetIndexModalContainer" %}
+    <button data-modal-target="{{modalIdT}}" data-modal-toggle="{{modalIdT}}"
+            class="btn primary">Обновить состав индекса</button> 
+    {% include 'analyzer/target_index_modal_form.html' %}
+    {% endwith %}
 </div>
 
 <div id="targetsContainer" class="min-w-full flex flex-row">

@@ -354,3 +354,33 @@ def update_all_accounts():
             taskLogger.info(f"Added {c} rates for '{currency.code}'")
     taskLogger.info(f"Total operations parsed: {total_ops}")
     return total_ops
+
+
+def update_index_positions_in_target(targetPortfolio_pk: int, index_code: str = "IMOEX"):
+    index_positions = moex_client.get_index_positions(index_code)
+    # установить в 0 все позиции
+    targetPortfolio = models.TargetPortfolio.objects.get(pk=targetPortfolio_pk)
+    models.TargetPortfolioValues.objects.filter(targetPortfolio=targetPortfolio).update(indexTarget=0)
+    # устанавливаем счетчик в количество детей - чтобы добавлять строки внизу списка
+    new_item_order_number = targetPortfolio.positions_count() + 1
+    # пройти по списку позиций индекса и проставить нужные/добавить новые элементы
+    for indexPos in index_positions:
+        ticker = indexPos['ticker']
+        weight = Decimal(indexPos['weight'])
+        taskLogger.info(f"Put weight of {weight} for {ticker}")
+        class_code = "TQBR"  # запрос пока только с мосбиржи - поэтому этот класс
+        instrument = models.Instrument.get_instrument_by_ticker(ticker, class_code)
+        _, created = models.TargetPortfolioValues.objects.update_or_create(
+            targetPortfolio=targetPortfolio,
+            instrument=instrument,
+            defaults={"indexTarget": weight},
+            create_defaults={"targetPortfolio": targetPortfolio,
+                             "order_number": new_item_order_number,
+                             "instrument": instrument,
+                             "indexTarget": weight}
+        )
+        if created:
+            taskLogger.info(f"Ticker {ticker} was added at position {new_item_order_number}")
+            new_item_order_number += 1
+        pass
+    pass

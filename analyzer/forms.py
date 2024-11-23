@@ -11,3 +11,19 @@ class TargetPortfolioForm(forms.ModelForm):
         widgets = {
             "accounts": forms.widgets.CheckboxSelectMultiple()
         }
+
+
+class TargetPortfolioIndexSelectionForm(forms.Form):
+    targetPortfolioPk = forms.CharField(widget=forms.HiddenInput)
+    indexName = forms.ChoiceField(
+        label="Индекс",
+        choices=(
+            ("IMOEX", "Индекс МосБиржи"),
+            ("IMOEX2", "Индекс МосБиржи (все сессии)"),
+            ("MOEXBC", "Индекс голубых фишек МосБиржи"),
+            ("RTSI", "Индекс РТС")
+        )
+    )
+
+    class Meta:
+        pass

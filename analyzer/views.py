@@ -145,9 +145,13 @@ def TargetsDetailView(request, portfolio_pk):
     targetPortfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
     targetPortfolioConfigform = TargetPortfolioForm(instance=targetPortfolio)
 
+    portfolioIndexForm = TargetPortfolioIndexSelectionForm()
+    portfolioIndexForm.fields['targetPortfolioPk'].initial = portfolio_pk
+
     context = {
         "portfolio": targetPortfolio,
         "portfolioConfigForm": targetPortfolioConfigform,
+        "portfolioIndexForm": portfolioIndexForm,
         }
 
     return HttpResponse(template.render(context, request))
@@ -160,6 +164,25 @@ def TargetPortfolioEditView(request, portfolio_pk):
 
     if form.is_valid():
         form.save()
+
+    return HttpResponseRedirect(reverse("analyzer:targetDetails",
+                                        kwargs={"portfolio_pk": portfolio_pk}))
+
+
+def TargetPortfolioUpdateIndex(request, portfolio_pk):
+    """Обновляет состав индекса для целевого портфеля
+    Пока - только часть индексов из MOEX.
+
+    Args:
+        portfolio_pk (int): pk целевого портфеля
+
+    Returns:
+        редирект на обновление страницы
+    """
+    form = TargetPortfolioIndexSelectionForm(request.POST or None)
+
+    if form.is_valid():
+        tasks.update_index_positions_in_target(portfolio_pk, form.cleaned_data['indexName'])
 
     return HttpResponseRedirect(reverse("analyzer:targetDetails",
                                         kwargs={"portfolio_pk": portfolio_pk}))

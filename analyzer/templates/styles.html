@@ -11,13 +11,16 @@
     label, legend {
         @apply block mb-2 text-sm font-medium text-gray-900;
     }
-    input, input[type=text], input[type=number] {
+    input, input[type=text], input[type=number], select {
         @apply bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5;
     }
     input[type=checkbox] {
         @apply w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded;
     }
 
+    .modalCaption {
+        @apply list-disc text-xs;
+    }
 
     input.inTableSmall {
         @apply inline block w-12 p-2 text-gray-900 border border-white bg-white bg-opacity-0 text-xs;
