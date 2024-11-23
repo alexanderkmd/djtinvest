@@ -10,7 +10,7 @@ from django.template import loader
 from django.urls import reverse
 from django.views import generic
 
-from .forms import TargetPortfolioForm
+from .forms import TargetPortfolioForm, TargetPortfolioIndexSelectionForm
 from .models import Account, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
 from .utils import is_htmx, paginate
 from . import tasks
