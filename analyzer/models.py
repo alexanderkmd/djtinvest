@@ -550,6 +550,13 @@ class TargetPortfolio(models.Model):
             return 0
         return self.total_value() / self.targetPrice * 100
 
+    def positions_count(self):
+        out = self.targetportfoliovalues_set.all().count()
+        return out
+
+    def values_count(self):
+        return self.positions_count()
+
 
 class TargetPortfolioValues(models.Model):
     """Список целевых значений и весов для данного портфеля

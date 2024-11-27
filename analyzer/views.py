@@ -10,8 +10,8 @@ from django.template import loader
 from django.urls import reverse
 from django.views import generic
 
-from .forms import TargetPortfolioForm, TargetPortfolioIndexSelectionForm
-from .models import Account, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
+from .forms import TargetPortfolioForm, TargetPortfolioIndexSelectionForm, TargetPortfolioAddPositionForm
+from .models import Account, Instrument, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
 from .utils import is_htmx, paginate
 from . import tasks
 
@@ -152,10 +152,14 @@ def TargetsDetailView(request, portfolio_pk):
     portfolioIndexForm = TargetPortfolioIndexSelectionForm()
     portfolioIndexForm.fields['targetPortfolioPk'].initial = portfolio_pk
 
+    positionAddForm = TargetPortfolioAddPositionForm()
+    positionAddForm.fields['targetPortfolioPk'].initial = portfolio_pk
+
     context = {
         "portfolio": targetPortfolio,
         "portfolioConfigForm": targetPortfolioConfigform,
         "portfolioIndexForm": portfolioIndexForm,
+        "positionAddForm": positionAddForm,
         }
 
     return HttpResponse(template.render(context, request))
@@ -241,6 +245,26 @@ def TargetPortfolioPositionItem(request, position_pk: int, toggle_update=False):
     if toggle_update:
         response['HX-Trigger'] = "tableReload"
     return response
+
+
+def TargetPortfolioPositionAdd(request):
+    form = TargetPortfolioAddPositionForm(request.POST or None)
+    if form.is_valid():
+        instrumentCode = form.data['instrumentCode']
+        if instrumentCode == "":
+            instrumentCode = form.data['instruments']
+        instrument = Instrument.get_instrument(instrumentCode)
+        targetPortfolio = TargetPortfolio.objects.get(pk=form.data['targetPortfolioPk'])
+        # TODO: проверка на ошибку в инструменте - что такой добавить нельзя, вывести сообщением
+        TargetPortfolioValues.objects.get_or_create(
+            targetPortfolio=targetPortfolio,
+            instrument=instrument,
+            defaults={
+                "order_number": targetPortfolio.values_count()+1,
+                "indexTarget": Decimal(0),
+            }
+        )
+    return redirect(reverse("analyzer:targetDetails", kwargs={"portfolio_pk": targetPortfolio.pk}))
 
 
 def TargetPositionSetCoefficient(request, position_pk: int):
