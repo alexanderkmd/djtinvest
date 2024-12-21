@@ -89,6 +89,8 @@ class LastPriceAdmin(admin.ModelAdmin):
 @admin.register(Operation)
 class OperationAdmin(admin.ModelAdmin):
     list_display = ["timestamp", "account", "type", "figi"]
+    list_filter = ["account", "type"]
+    ordering = ["-timestamp",]
 
 
 @admin.register(Position)
