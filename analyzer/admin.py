@@ -96,6 +96,7 @@ class OperationAdmin(admin.ModelAdmin):
 @admin.register(Position)
 class PositionAdmin(admin.ModelAdmin):
     list_display = ["account", "figi", "instrument", "quantity", "updated"]
+    list_filter = ["account"]
 
 
 @admin.register(Split)
