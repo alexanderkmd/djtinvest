@@ -199,22 +199,34 @@ def get_tinkoff_positions(accountId: str):
     models.Position.objects.filter(account=account).update(quantity=0)
 
     for tmpPosition in positions:
-        position = models.position_from_tinkoff_client(tmpPosition, accountId)
+        print("------------------------------------")
+        try:
+            position = models.position_from_tinkoff_client(tmpPosition, accountId)
+        except Exception as e:
+            logging.warning(f"Позиция не обработана - пропускаю:\n{tmpPosition} ")
+            logging.error(f"Возникшая ошибка:\n{e}")
+            continue
+
         try:
             position.save()
+            continue
         except IntegrityError:
-            taskLogger.debug(f"Position {position.figi} already exists - updating")
-            tmpPositions = models.Position.objects.filter(
-                instrument=position.instrument,
-                account=account
-            )
-            if tmpPositions.count() > 1:
-                tmpPosition = tmpPositions.get(figi=position.figi)
-            else:
-                tmpPosition = tmpPositions[0]
+            taskLogger.info(f"Position {position.figi} already exists in {account} - updating")
 
-            position.pk = tmpPosition.pk
-            position.save()
+        # Если уже есть - то обновить
+        tmpPositions = models.Position.objects.filter(
+            instrument=position.instrument,
+            account=account,
+            blocked=position.blocked
+        )
+        if tmpPositions.count() == 1:
+            tmpPosition = tmpPositions[0]
+        else:
+            taskLogger.error(f"More than 1 position for {position.figi} in {account}!")
+            tmpPosition = tmpPositions[0]
+
+        position.pk = tmpPosition.pk
+        position.save()
 
 
 def preload_currencies_to_db():
