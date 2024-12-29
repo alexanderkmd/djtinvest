@@ -35,4 +35,6 @@ urlpatterns = [
          name="positionAdd"),
     path("target/position/delete/<int:position_pk>", views.TargetPositionDelete,
          name="positionDelete"),
+    path("target/position/move/<int:position_pk>/<str:dir>", views.TargetPortfolioPositionItemMove,
+         name="positionMove"),
 ]

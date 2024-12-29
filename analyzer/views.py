@@ -204,7 +204,7 @@ def TargetPortfolioPositions(request, portfolio_pk):
         targetPortfolio__pk=portfolio_pk
         ).select_related(
             "targetPortfolio"
-        ).prefetch_related("instrument")
+        ).prefetch_related("instrument").order_by("order_number")
 
     # запрос текущих цен бумаг одним запросом
     tasks.target_portfolio_preload_last_prices(portfolio_pk)
@@ -245,6 +245,42 @@ def TargetPortfolioPositionItem(request, position_pk: int, toggle_update=False):
     if toggle_update:
         response['HX-Trigger'] = "tableReload"
     return response
+
+
+def TargetPortfolioPositionItemMove(request, position_pk: int, dir: str):
+    """Moves TargetPositionValue in personal order list
+
+    Args:
+        position_pk (int): pk of TargetPositionValue
+        dir (str): direction of movement (up/down)
+
+    Returns:
+        HttpResponse: code 200
+    """
+    targetPosition = TargetPortfolioValues.objects.get(pk=position_pk)
+    movement = 1
+    if dir == "up":
+        movement = -1
+    targetPosition.order_number += movement
+    if targetPosition.order_number == 0:
+        logging.info("Позиция и так на самом верху - двигать некуда!")
+        return HttpResponse()
+    other_positions = TargetPortfolioValues.objects.filter(
+        targetPortfolio=targetPosition.targetPortfolio,
+        order_number__gte=targetPosition.order_number
+    ).order_by("order_number").all()
+    counter = targetPosition.order_number
+    for item in other_positions:
+        if item.order_number == targetPosition.order_number and dir != "up":
+            item.order_number += -1
+            item.save()
+            continue
+        counter += 1
+        item.order_number = counter
+        item.save()
+    targetPosition.save()
+    logging.debug(f"Item new order position: {targetPosition.order_number}")
+    return HttpResponse()
 
 
 def TargetPortfolioPositionAdd(request):
