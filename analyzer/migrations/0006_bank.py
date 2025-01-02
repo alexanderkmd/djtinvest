@@ -23,5 +23,9 @@ class Migration(migrations.Migration):
                 ('show_link', models.BooleanField(default=True, verbose_name='Показывать ссылку')),
                 ('url_template', models.CharField(default='', max_length=200, verbose_name='Ссылка на инструменты')),
             ],
+            options={
+                'verbose_name': 'Банк',
+                'verbose_name_plural': 'Банки',
+            },
         ),
     ]

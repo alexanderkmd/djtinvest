@@ -47,6 +47,9 @@ class Bank(models.Model):
             pass
         return "#"
 
+    def __str__(self) -> str:
+        return f"{self.short_name}"
+
 
 ##############################
 #          ACCOUNT           #
@@ -58,10 +61,11 @@ class AccountManager(models.Manager):
 
 
 class Account (models.Model):
-    accountId = models.CharField(max_length=64, unique=True)
-    type = models.CharField(max_length=64)
-    name = models.CharField(max_length=128)
-    bank = models.CharField(max_length=60)
+    accountId = models.CharField(max_length=64, unique=True, verbose_name="Идентификатор")
+    type = models.CharField(max_length=64, verbose_name="Тип счета")
+    name = models.CharField(max_length=128, verbose_name="Название")
+    bankId = models.ForeignKey(Bank, on_delete=models.CASCADE,
+                               default=1, verbose_name="Банк/Брокер")
     status = models.CharField(max_length=32)
     opened = models.DateField()
     closed = models.DateField(blank=True, null=True)
@@ -75,7 +79,7 @@ class Account (models.Model):
         verbose_name_plural = "Счета"
 
     def __str__(self) -> str:
-        return f"{self.accountId}-{self.name} ({self.bank})"
+        return f"{self.name} ({self.bankId})"
 
 
 # def account_by_accountId(accountId: str) -> Account:
@@ -87,7 +91,7 @@ def account_from_tinkoff_client(account):
     tmpAccount.accountId = account.id
     tmpAccount.type = account.type.name
     tmpAccount.name = account.name
-    tmpAccount.bank = "Т-Банк"
+    tmpAccount.bankId = Bank.objects.filter(alias="tinkoff").first()
     tmpAccount.status = account.status.name
     tmpAccount.opened = account.opened_date
     tmpAccount.closed = account.closed_date

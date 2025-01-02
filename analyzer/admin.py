@@ -9,7 +9,7 @@ from .models import (Account, Bank, CentrobankRate, Currency, Instrument, Instru
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ["bank", "name", "type"]
+    list_display = ["name", "bankId", "type"]
 
 
 @admin.register(Bank)
