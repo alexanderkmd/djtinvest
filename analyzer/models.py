@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.utils.functional import cached_property
 from django.core.exceptions import ObjectDoesNotExist
 
 from . import tasks
@@ -15,6 +16,32 @@ accountLoggerLevel = settings.ACCOUNT_LOGGING_LEVEL
 instrumentLoggerLevel = settings.INSTRUMENT_LOGGING_LEVEL
 currencyLoggerLevel = settings.CURRENCY_LOGGING_LEVEL
 centrobankRateLoggerLevel = settings.CURRENCY_LOGGING_LEVEL
+
+
+##############################
+#            BANK            #
+##############################
+
+class Bank(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название банка")
+    name_eng = models.CharField(max_length=255, verbose_name="Bank name in English")
+    short_name = models.CharField(max_length=20, verbose_name="Краткое название")
+    short_name_eng = models.CharField(max_length=20, verbose_name="Short name in English")
+    figi = models.CharField(max_length=20, verbose_name="figi")
+    alias = models.CharField(max_length=20, verbose_name="Внутренний идентификатор")
+    show_link = models.BooleanField(verbose_name="Показывать ссылку", default=True)
+    url_template = models.CharField(max_length=200, verbose_name="Ссылка на инструменты", default="")
+
+    class Meta:
+        verbose_name = "Банк"
+        verbose_name_plural = "Банки"
+
+    @cached_property
+    def icon_url(self) -> str:
+        instrument = Instrument.get_instrument(self.figi)
+        if instrument is not None:
+            return instrument.icon_url()
+        return "#"
 
 
 ##############################

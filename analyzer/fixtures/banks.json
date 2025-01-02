@@ -1,0 +1,44 @@
+[
+{
+  "model": "analyzer.bank",
+  "pk": 1,
+  "fields": {
+    "name": "Публичное акционерное общество «Сбербанк России»",
+    "name_eng": "Sberbank of Russia",
+    "short_name": "ПАО Сбербанк",
+    "short_name_eng": "Sberbank",
+    "figi": "BBG004730N88",
+    "alias": "sberbank",
+    "show_link": true,
+    "url_template": "https://www.sberbank.ru/ru/person/investments/{instrument_type}/{self.ticker.lower()}/"
+  }
+},
+{
+  "model": "analyzer.bank",
+  "pk": 2,
+  "fields": {
+    "name": "Акционерное общество «ТБанк»",
+    "name_eng": "TBank",
+    "short_name": "АО «ТБанк»",
+    "short_name_eng": "TBank",
+    "figi": "TCS80A107UL4",
+    "alias": "tinkoff",
+    "show_link": true,
+    "url_template": "https://www.tbank.ru/invest/{instrument_type}/{self.ticker}/"
+  }
+},
+{
+  "model": "analyzer.bank",
+  "pk": 3,
+  "fields": {
+    "name": "Банк ВТБ (публичное акционерное общество)",
+    "name_eng": "VTB Bank (Public Joint-Stock Company)",
+    "short_name": "Банк ВТБ (ПАО)",
+    "short_name_eng": "VTB Bank (PJSC)",
+    "figi": "BBG004730ZJ9",
+    "alias": "vtb",
+    "show_link": false,
+    "url_template": ""
+  }
+}
+]

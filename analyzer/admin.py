@@ -3,13 +3,32 @@ from django.shortcuts import redirect
 from django.urls import path, reverse
 # https://docs.djangoproject.com/en/5.1/ref/contrib/admin/#reversing-admin-urls
 from django.utils.html import format_html
-from .models import (Account, CentrobankRate, Currency, Instrument, InstrumentData,
+from .models import (Account, Bank, CentrobankRate, Currency, Instrument, InstrumentData,
                      LastPrice, Operation, Position, Split, TargetPortfolio, TargetPortfolioValues)
 
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = ["bank", "name", "type"]
+
+
+@admin.register(Bank)
+class BankAdmin(admin.ModelAdmin):
+    list_display = ["icon_img", "short_name_link", "short_name_eng", "name"]
+    ordering = ["short_name"]
+
+    def icon_img(self, obj: Bank) -> str:
+        url = reverse("admin:analyzer_bank_change", args=[obj.pk])
+        icon_url = obj.icon_url
+        return format_html(f"""<a href="{url}"><img src="{icon_url}" height="32px"></a>""")
+
+    icon_img.short_description = ""
+
+    def short_name_link(self, obj: Bank) -> str:
+        url = reverse("admin:analyzer_bank_change", args=[obj.pk])
+        return format_html(f"""<a href="{url}">{obj.short_name}</a>""")
+
+    short_name_link.short_description = "Название краткое"
 
 
 @admin.register(CentrobankRate)
