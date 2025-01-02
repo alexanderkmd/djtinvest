@@ -226,6 +226,24 @@ class InstrumentData(models.Model):
         self.liquidity_flag = share_data_in.liquidity_flag
         self.div_yield_flag = share_data_in.div_yield_flag
 
+    def instrument_url(self, bank) -> str:
+        url = ""
+        if bank == "tinkoff":
+            instrument_type = f"{self.instrument_type}s"
+            if self.instrument_type == "share":
+                instrument_type = "stocks"
+            elif self.instrument_type == "currency":
+                instrument_type = "currencies"
+            url = f"https://www.tbank.ru/invest/{instrument_type}/{self.ticker}/"
+
+        if bank == "sberbank":
+            instrument_type = f"{self.instrument_type}"
+            if self.instrument_type == "share":
+                instrument_type = "stocks"
+            url = f"https://www.sberbank.ru/ru/person/investments/{instrument_type}/{self.ticker.lower()}/"
+
+        return url
+
 
 def instrument_from_tinkoff_client(instrumentIn) -> InstrumentData:
     """Формируем инструмент для базы данных
