@@ -38,9 +38,13 @@ class Bank(models.Model):
 
     @cached_property
     def icon_url(self) -> str:
-        instrument = Instrument.get_instrument(self.figi)
-        if instrument is not None:
-            return instrument.icon_url()
+        try:
+            instrument = Instrument.get_instrument(self.figi)
+            if instrument is not None:
+                return instrument.icon_url()
+        except Exception as e:
+            logging.error(f"Не могу найти иконку по причине: {e}")
+            pass
         return "#"
 
 

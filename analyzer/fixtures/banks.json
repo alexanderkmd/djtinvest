@@ -3,6 +3,20 @@
   "model": "analyzer.bank",
   "pk": 1,
   "fields": {
+    "name": "Ручной",
+    "name_eng": "Input",
+    "short_name": "Ручной",
+    "short_name_eng": "Input",
+    "figi": "#",
+    "alias": "input",
+    "show_link": false,
+    "url_template": "#"
+  }
+},
+{
+  "model": "analyzer.bank",
+  "pk": 2,
+  "fields": {
     "name": "Публичное акционерное общество «Сбербанк России»",
     "name_eng": "Sberbank of Russia",
     "short_name": "ПАО Сбербанк",
@@ -15,7 +29,7 @@
 },
 {
   "model": "analyzer.bank",
-  "pk": 2,
+  "pk": 3,
   "fields": {
     "name": "Акционерное общество «ТБанк»",
     "name_eng": "TBank",
@@ -29,7 +43,7 @@
 },
 {
   "model": "analyzer.bank",
-  "pk": 3,
+  "pk": 4,
   "fields": {
     "name": "Банк ВТБ (публичное акционерное общество)",
     "name_eng": "VTB Bank (Public Joint-Stock Company)",
@@ -38,7 +52,7 @@
     "figi": "BBG004730ZJ9",
     "alias": "vtb",
     "show_link": false,
-    "url_template": ""
+    "url_template": "http://vtb.ru"
   }
 }
 ]
