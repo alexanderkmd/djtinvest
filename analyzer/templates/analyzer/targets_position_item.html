@@ -1,3 +1,4 @@
+{% load instrument_tags %}
 
 <tr class="hover:bg-gray-300" id="position-row-{{position.pk}}" 
     hx-get="{% url 'analyzer:targetPositionItem' position.pk %}"  
@@ -20,14 +21,7 @@
                 </svg>
             </button>
             </form></div>
-        <div class="flex-shrink-0 h-10 w-10">
-            <img class="h-10 w-10 rounded-full"   src="{{position.instrument.icon_url}}" alt="">
-        </div>
-        <div class="ml-4"><a href="#">
-            <div class="text-sm font-medium text-gray-900 max-w-64 overflow-hidden">{{position.instrument.name}}</div>
-            <div class="text-sm text-gray-500">{{position.instrument.ticker}} - {{position.instrument.figi}}</div>
-            </a>
-        </div>
+        {% instrument_badge position.instrument True True %}
         </div>
     </td>
 
