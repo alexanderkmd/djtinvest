@@ -209,6 +209,17 @@ class InstrumentData(models.Model):
         url = f"https://invest-brands.cdn-tinkoff.ru/{icon}x160.png"
         return url
 
+    def name_short(self) -> str:
+        """Сокращает название бумаги за счет аббревиатур
+
+        Returns:
+            str: сокращенное название бумаги
+        """
+        name = self.name
+        name = name.replace("- привилегированные акции", "(ап)")
+        name = name.replace("- Привилегированные акции", "(ап)")
+        return name
+
     def populate_share_fields(self, share_data_in):
         self.sector = share_data_in.sector
         self.share_type = share_data_in.share_type.name
