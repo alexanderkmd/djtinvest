@@ -1,6 +1,7 @@
 from django import forms
 from .models import InstrumentData, TargetPortfolio
 
+import logging
 from typing import List
 
 
@@ -32,13 +33,17 @@ class TargetPortfolioIndexSelectionForm(forms.Form):
 
 
 def populateInstrumentChoices() -> List[tuple[str, str]]:
-    instruments = InstrumentData.objects.all().order_by("name")
-
     out = list()
-    for instrument in instruments:
-        name = f"{instrument.name} ({instrument.ticker})"
-        figi = instrument.figi
-        out.append((figi, name))
+
+    try:
+        # Had to make envelope as it blocks migrations without it
+        instruments = InstrumentData.objects.all().order_by("name")
+        for instrument in instruments:
+            name = f"{instrument.name} ({instrument.ticker})"
+            figi = instrument.figi
+            out.append((figi, name))
+    except Exception as e:
+        logging.error(f"Cannot populate field: {e}")
 
     return out
 
