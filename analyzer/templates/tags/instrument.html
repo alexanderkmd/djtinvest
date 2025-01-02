@@ -1,0 +1,20 @@
+<div class="grid grid-cols-7 justify-item-stretch w-72 h-min-12 items-center">
+    <div class="h-10 w-10">
+      <img class="h-10 w-10 rounded-full" src="{{instrument.icon_url}}" alt="">
+    </div>
+    <div class="ml-4 
+    {% if show_banks %}col-span-5{% else %} col-span-6 {% endif %} 
+    overflow-hidden">
+      <div class="text-sm text-nowrap hover:text-wrap font-medium text-gray-900 max-w-64 overflow-hidden">{{instrument.name_short}}</div>
+      <div class="text-xs text-gray-500">{{instrument.ticker}} - {{instrument.figi}}</div>
+    </div>
+    {% if show_banks %}
+    <div class="px-1 max-w-14 min-w-0 grid grid-cols-2 justify-self-end">
+      {% for bank in banks %}
+        <a href="{{bank.instrument_url}}" title="{{bank.name}}" target="_blank">
+          <img src="{{bank.icon}}" class="h-5 w-5" />
+        </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+</div>
