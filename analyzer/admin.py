@@ -77,7 +77,14 @@ def currency_toggle_auto_rate_preload(request, currency_pk=0):
 @admin.register(Instrument)
 class InstrumentAdmin(admin.ModelAdmin):
     list_display = ["idType", "idValue", "instrumentData"]
+    list_filter = ["idType"]
     ordering = ["instrumentData"]
+
+
+class InstruemntIdsInline(admin.TabularInline):
+    model = Instrument
+    extra = 1
+    fields = ["idType", "idValue"]
 
 
 @admin.register(InstrumentData)
@@ -85,6 +92,8 @@ class InstrumentDataAdmin(admin.ModelAdmin):
     list_display = ["icon_img", "ticker_name", "figi", "isin",
                     "instrument_type", "uid", "position_uid", "asset_uid", "updated"]
     ordering = ["ticker"]
+    list_filter = ["instrument_type"]
+    inlines = [InstruemntIdsInline]
 
     def icon_img(self, obj: InstrumentData) -> str:
         url = reverse("admin:analyzer_instrumentdata_change", args=[obj.pk])
