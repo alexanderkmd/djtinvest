@@ -22,6 +22,21 @@ centrobankRateLoggerLevel = settings.CURRENCY_LOGGING_LEVEL
 #            BANK            #
 ##############################
 
+class BankManager(models.Manager):
+    def by_alias(self, alias) -> 'Bank | None':
+        try:
+            return self.get(alias=alias)
+        except Exception as e:
+            logging.error(f"Cannot get Bank by alias '{alias}'. Error: {e}")
+            return None
+
+    def get_sberbank(self):
+        return self.by_alias("sberbank")
+
+    def get_tinkoff(self):
+        return self.by_alias("tinkoff")
+
+
 class Bank(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название банка")
     name_eng = models.CharField(max_length=255, verbose_name="Bank name in English")
@@ -35,6 +50,12 @@ class Bank(models.Model):
     class Meta:
         verbose_name = "Банк"
         verbose_name_plural = "Банки"
+
+    objects = BankManager()
+    by_alias = objects.by_alias
+    get_sberbank = objects.get_sberbank
+    get_tinkoff = objects.get_tinkoff
+    get_tbank = objects.get_tinkoff
 
     @cached_property
     def icon_url(self) -> str:
@@ -87,11 +108,15 @@ class Account (models.Model):
 
 
 def account_from_tinkoff_client(account):
+    tinkoff_bank = Bank.get_tinkoff()
+    if tinkoff_bank is None:
+        logging.critical("Error creating tinkoff account - Tinkoff Bank not found in Banks")
+        return None
     tmpAccount = Account()
     tmpAccount.accountId = account.id
     tmpAccount.type = account.type.name
     tmpAccount.name = account.name
-    tmpAccount.bankId = Bank.objects.filter(alias="tinkoff").first()
+    tmpAccount.bankId = tinkoff_bank
     tmpAccount.status = account.status.name
     tmpAccount.opened = account.opened_date
     tmpAccount.closed = account.closed_date
