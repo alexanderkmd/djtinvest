@@ -5,9 +5,11 @@ import re
 
 from bs4 import BeautifulSoup, Tag
 
+from typing import Dict
 from datetime import datetime
+from decimal import Decimal
 
-from .models import Account, Bank, Instrument, InstrumentData, Position
+from .models import Account, Bank, Instrument, InstrumentData, Operation, Position
 
 sberLogger = logging.getLogger(__name__)
 sberLogger.setLevel(logging.DEBUG)  # lsettings.TASKS_LOGGING_LEVEL)
@@ -53,13 +55,15 @@ def parse_account(soup: BeautifulSoup) -> Account | None:
         return None
 
 
-def parse_instruments_list(soup: BeautifulSoup | Tag):
+def parse_instruments_list(soup: BeautifulSoup | Tag) -> Dict[str, InstrumentData]:
     """Loads instruments for report to the DB
 
     Args:
         soup (BeautifulSoup | Tag): Instrument Table content
     """
     sberLogger.info("Start Sberbank HTML report instrument list parsing")
+
+    instruments = {}
 
     for row in soup.find_all("tr"):
         if row.has_attr('class') and row['class'][0] in ["table-header", "rn", "summary-row"]:
@@ -69,13 +73,14 @@ def parse_instruments_list(soup: BeautifulSoup | Tag):
         if cells[0].has_attr('colspan'):
             # пропускаем ряды подзаголовков и разбивки
             continue
+        name_col = 0
         ticker_col = 1
         isin_col = 2
+        name = cells[name_col].string
         ticker = cells[ticker_col].string
         isin = cells[isin_col].string
         try:
-            Instrument.get_instrument_by_ticker(ticker, "TQBR")
-            continue
+            instrument = Instrument.get_instrument_by_ticker(ticker, "TQBR")
         except Exception as e:
             sberLogger.error(f"Ошибка парсинга инструмента: {e}")
         try:
@@ -84,8 +89,106 @@ def parse_instruments_list(soup: BeautifulSoup | Tag):
             sberLogger.info(f"Успешно нашли {instrument}!")
         except Exception as e:
             sberLogger.error(f"Ошибка парсинга инструмента: {e}")
-    pass
+            continue
+        instruments[name] = instrument
+        instruments[ticker] = instrument
+        instruments[isin] = instrument
+    return instruments
 
+
+def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments: Dict[str, InstrumentData]):
+    sberLogger.info("Start Sberbank HTML buy/sell operations parsing")
+
+    operation_number_col = 13
+    date_col = 0
+    time_col = 2
+    instrument_code_col = 4
+    currency_col = 5
+    operation_type_col = 6
+    qtty_col = 7
+    price_col = 8
+    payment_col = 9
+    nkd_col = 10
+    broker_comission_col = 11
+    market_comission_col = 12
+    operations_status_col = 15
+
+    for row in soup.find_all("tr"):
+        if row.has_attr('class') and row['class'][0] in ["table-header", "rn", "summary-row"]:
+            # не парсим ряды заголовков и концевые
+            continue
+        cells = row.find_all("td", string=True)
+        if cells[0].has_attr('colspan'):
+            # пропускаем ряды подзаголовков и разбивки
+            continue
+
+        operation_number = cells[operation_number_col].string
+        date = cells[date_col].string
+        time = cells[time_col].string
+        instrument_code = cells[instrument_code_col].string
+        currency = cells[currency_col].string
+        operation_type = cells[operation_type_col].string
+        qtty = cells[qtty_col].string
+        price = Decimal(cells[price_col].string.replace(" ", ""))
+        payment = Decimal(cells[payment_col].string.replace(" ", ""))
+        nkd = Decimal(cells[nkd_col].string)
+        broker_comission = Decimal(cells[broker_comission_col].string.replace(" ", ""))
+        market_comission = Decimal(cells[market_comission_col].string.replace(" ", ""))
+        try:
+            operations_status = cells[operations_status_col].string
+        except:
+            # если комментарий пустой...
+            operations_status = cells[operations_status_col-1].string
+        instrument = instruments.get(instrument_code, None)
+        if instrument is None:
+            sberLogger.error(f"Инструмент '{instrument_code}' не найден, но я пока не придумал, что с ним делать?!?!?!")
+            continue
+
+        # 27.12.2024 13:55:57
+        operation_datetime = datetime.strptime(f"{date} {time}", "%d.%m.%Y %H:%M:%S")
+        print(operation_datetime)
+        try:
+            operation = Operation.objects.get(operationId=operation_number)
+            sberLogger.info(f"Операция '{operation_type} {instrument_code} {date}' уже существует - пропускаю")
+            continue
+        except:
+            pass
+        operation = Operation(
+            operationId=operation_number,
+            parentOperationId=None,
+            account=account,
+            currency=currency,
+            payment=payment,
+            price=price,
+            state=operations_status,
+            timestamp=operation_datetime,
+            type=operation_type,
+            quantity=qtty,
+            instrument=instrument,
+            figi=instrument.figi,
+            instrument_type=instrument.instrument_type
+        )
+        operation.save()
+
+        if broker_comission != 0 or market_comission != 0:
+            tax_operation = Operation(
+                operationId=f"{operation_number}-tax",
+                parentOperationId=operation_number,
+                account=account,
+                currency=currency,
+                payment=-(broker_comission+market_comission),
+                price=0,
+                state="OPERATION_STATE_EXECUTED",
+                timestamp=operation_datetime,
+                type="OPERATION_TYPE_BROKER_FEE",
+                quantity=0,
+                instrument=instrument,
+                figi=instrument.figi,
+                instrument_type=instrument.instrument_type
+            )
+            tax_operation.save()
+
+    return
 
 def parse_portfolio(soup: BeautifulSoup, account: Account):
     sberLogger.info("Start Sberbank HTML report portfolio parsing")
@@ -127,7 +230,10 @@ def parse_html_report(file_name):
         return
 
     instruments_table_position = soup.find(string=re.compile("Справочник Ценных Бумаг"))
-    parse_instruments_list(instruments_table_position.find_next("table"))
+    instruments = parse_instruments_list(instruments_table_position.find_next("table"))
+
+    buy_sell_operations_table_position = soup.find(string=re.compile("Сделки купли/продажи ценных бумаг"))
+    parse_buy_sell_operations(buy_sell_operations_table_position.find_next("table"), account, instruments)
 
     portfolio_table_position = soup.find(string=re.compile("Портфель Ценных Бумаг"))
     parse_portfolio(portfolio_table_position.find_next("table"), account)
