@@ -190,6 +190,132 @@ def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments
 
     return
 
+
+def parse_money_operations(soup: BeautifulSoup, account: Account, instruments: Dict[str, InstrumentData]):
+    sberLogger.info("Start Sberbank HTML money operations parsing")
+
+    date_col = 0
+    market_col = 1
+    description_col = 2
+    currency_col = 3
+    debit_col = 4
+    credit_col = 5
+
+    for row in soup.find_all("tr"):
+        if row.has_attr('class') and row['class'][0] in ["table-header", "rn", "summary-row"]:
+            # не парсим ряды заголовков и концевые
+            continue
+        cells = row.find_all("td", string=True)
+        if cells[0].has_attr('colspan'):
+            # пропускаем ряды подзаголовков и разбивки
+            continue
+
+        date = cells[date_col].string
+        market = cells[market_col].string
+        description = cells[description_col].string
+        currency = cells[currency_col].string
+        debit = Decimal(cells[debit_col].string.replace(" ", ""))
+        credit = Decimal(cells[credit_col].string.replace(" ", ""))
+
+        description_split = description.split(" ")
+        description_start = description_split[0]
+
+        if description_start in ["Комиссия", "Сделка"]:
+            # Комиссии и сделки обрабатываются в parse_buy_sell_operations
+            # поэтому пропускаем
+            sberLogger.debug("Not parsing comission/trade operations here")
+            continue
+
+        operation_id = ""
+        operation_type = ""
+        operation_sum = Decimal(0)
+        tax = Decimal(0)
+        instrument = None
+        figi = ""
+        instrument_type = ""
+
+        # 27.12.2024 00:00:00+03:00
+        operation_datetime = datetime.strptime(f"{date} 00:00:00+03:00", "%d.%m.%Y %H:%M:%S%z")
+        operation_id = operation_datetime.strftime("%y%m%d") + account.accountId
+
+        if description_start == "Зачисление":
+            if len(description_split) == 2:
+                # "Зачисление д/с"
+                sberLogger.debug(f"Input operation {debit} on {date}")
+                operation_id += "-input"
+                operation_type = "OPERATION_TYPE_INPUT"
+                operation_sum = debit
+            else:
+                # "Зачисление д/с (купон 7 по ОФЗ 26238)"
+                sberLogger.debug(f"Coupon operation on {date}")
+                operation_type = "OPERATION_TYPE_COUPON"
+                operation_sum = debit
+                re_match_string = r"\(купон .* по (?P<bond>.*)\)"
+                out = re.search(re_match_string, description)
+                bond = out.groupdict()['bond']
+                instrument = instruments[bond]
+                figi = instrument.figi
+                instrument_type = instrument.instrument_type
+
+                operation_id += "-coupon" + bond.replace(" ", "")
+        elif description_start == "Дивиденды":
+            sberLogger.debug(f"Dividend operation on {date}")
+            operation_type = "OPERATION_TYPE_DIVIDEND"
+            tax_operation_type = "OPERATION_TYPE_DIVIDEND_TAX"
+
+            re_match_string = r"Дивиденды (?P<stock>.*); ISIN (?P<isin>.*); Дата Фиксации .*; Кол-во (?P<qtty>\d*); Ставка Выплаты (?P<payment>\d*); Курс конвертации (?P<rate>[\d\.]*);"
+            out = re.search(re_match_string, description)
+            isin = out.groupdict()['isin']
+            instrument = instruments[isin]
+            figi = instrument.figi
+            instrument_type = instrument.instrument_type
+
+            operation_id += "-dividend-" + isin
+            operation_sum = Decimal(out.groupdict()['payment'])
+            tax = debit - operation_sum
+
+        if Operation.objects.filter(operationId=operation_id).exists():
+            sberLogger.info(f"Операция '{operation_type} {date}' уже существует - пропускаю")
+            continue
+
+        operation = Operation(
+            operationId=operation_id,
+            parentOperationId=None,
+            account=account,
+            currency=currency,
+            payment=operation_sum,
+            price=0,
+            state="OPERATION_STATE_EXECUTED",
+            timestamp=operation_datetime,
+            type=operation_type,
+            quantity=0,
+            instrument=instrument,
+            figi=figi,
+            instrument_type=instrument_type
+        )
+        operation.save()
+
+        if tax != Decimal(0):
+            tax_operation = Operation(
+                operationId=f"{operation_id}-tax",
+                parentOperationId=operation_id,
+                account=account,
+                currency=currency,
+                payment=-tax,
+                price=0,
+                state="OPERATION_STATE_EXECUTED",
+                timestamp=operation_datetime,
+                type=tax_operation_type,
+                quantity=0,
+                instrument=instrument,
+                figi=figi,
+                instrument_type=instrument_type
+            )
+            tax_operation.save()
+
+    pass
+
+
 def parse_portfolio(soup: BeautifulSoup, account: Account):
     sberLogger.info("Start Sberbank HTML report portfolio parsing")
 
@@ -234,6 +360,9 @@ def parse_html_report(file_name):
 
     buy_sell_operations_table_position = soup.find(string=re.compile("Сделки купли/продажи ценных бумаг"))
     parse_buy_sell_operations(buy_sell_operations_table_position.find_next("table"), account, instruments)
+
+    money_operations_table_position = soup.find(string=re.compile("Движение денежных средств за период"))
+    parse_money_operations(money_operations_table_position.find_next("table"), account, instruments)
 
     portfolio_table_position = soup.find(string=re.compile("Портфель Ценных Бумаг"))
     parse_portfolio(portfolio_table_position.find_next("table"), account)
