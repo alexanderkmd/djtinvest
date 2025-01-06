@@ -440,8 +440,8 @@ def get_last_price(figi: str) -> LastPrice:
 ##############################
 
 class Operation(models.Model):
-    operationId = models.CharField(max_length=20, unique=True)
-    parentOperationId = models.CharField(max_length=20, null=True, blank=True)
+    operationId = models.CharField(max_length=50, unique=True)
+    parentOperationId = models.CharField(max_length=50, null=True, blank=True)
     account = models.ForeignKey(Account, on_delete=models.PROTECT)
     currency = models.CharField(max_length=3)
     payment = models.DecimalField(max_digits=20, decimal_places=9)

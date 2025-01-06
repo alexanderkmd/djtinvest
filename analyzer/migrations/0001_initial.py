@@ -125,8 +125,8 @@ class Migration(migrations.Migration):
             name='Operation',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('operationId', models.CharField(max_length=20, unique=True)),
-                ('parentOperationId', models.CharField(blank=True, max_length=20, null=True)),
+                ('operationId', models.CharField(max_length=50, unique=True)),
+                ('parentOperationId', models.CharField(blank=True, max_length=50, null=True)),
                 ('currency', models.CharField(max_length=3)),
                 ('payment', models.DecimalField(decimal_places=9, max_digits=20)),
                 ('price', models.DecimalField(decimal_places=9, max_digits=20)),
