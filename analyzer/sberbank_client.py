@@ -123,11 +123,17 @@ def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments
             continue
 
         operation_number = cells[operation_number_col].string
+        operation_number += "-" + account.accountId
+
         date = cells[date_col].string
         time = cells[time_col].string
         instrument_code = cells[instrument_code_col].string
         currency = cells[currency_col].string
         operation_type = cells[operation_type_col].string
+        if operation_type == "Покупка":
+            operation_type = "OPERATION_TYPE_BUY"
+        elif operation_type == "Продажа":
+            operation_type = "OPERATION_TYPE_SELL"
         qtty = cells[qtty_col].string
         price = Decimal(cells[price_col].string.replace(" ", ""))
         payment = Decimal(cells[payment_col].string.replace(" ", ""))
@@ -146,13 +152,11 @@ def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments
 
         # 27.12.2024 13:55:57
         operation_datetime = datetime.strptime(f"{date} {time}", "%d.%m.%Y %H:%M:%S")
-        print(operation_datetime)
-        try:
-            operation = Operation.objects.get(operationId=operation_number)
+
+        if Operation.objects.filter(operationId=operation_number).exists():
             sberLogger.info(f"Операция '{operation_type} {instrument_code} {date}' уже существует - пропускаю")
             continue
-        except:
-            pass
+
         operation = Operation(
             operationId=operation_number,
             parentOperationId=None,
