@@ -78,8 +78,12 @@ class Bank(models.Model):
 ##############################
 
 class AccountManager(models.Manager):
-    def by_account_id(self, accountId):
-        return self.get(accountId=accountId)
+    def by_account_id(self, accountId) -> 'Account | None':
+        try:
+            return self.get(accountId=accountId)
+        except Exception as e:
+            logging.error(e)
+            return None
 
 
 class Account (models.Model):
@@ -102,10 +106,6 @@ class Account (models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.bankId})"
-
-
-# def account_by_accountId(accountId: str) -> Account:
-#    return Account.objects.get(accountId=accountId)
 
 
 def account_from_tinkoff_client(account):
