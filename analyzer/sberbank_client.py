@@ -305,7 +305,7 @@ def parse_money_operations(soup: BeautifulSoup, account: Account, instruments: D
                 parentOperationId=operation_id,
                 account=account,
                 currency=currency,
-                payment=-tax,
+                payment=-abs(tax),  # tax has to be negative payment in DB
                 price=0,
                 state="OPERATION_STATE_EXECUTED",
                 timestamp=operation_datetime,
