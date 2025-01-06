@@ -275,7 +275,7 @@ class InstrumentData(models.Model):
         return url
 
 
-def instrument_from_tinkoff_client(instrumentIn) -> InstrumentData:
+def instrument_from_tinkoff_client(instrumentIn, instrument_type="") -> InstrumentData:
     """Формируем инструмент для базы данных
 
     Args:
@@ -295,7 +295,10 @@ def instrument_from_tinkoff_client(instrumentIn) -> InstrumentData:
     tmpInstrument.uid = instrumentIn.uid
     tmpInstrument.position_uid = instrumentIn.position_uid
     tmpInstrument.asset_uid = instrumentIn.asset_uid
-    tmpInstrument.instrument_type = instrumentIn.instrument_type
+    if instrument_type == "":
+        tmpInstrument.instrument_type = instrumentIn.instrument_type
+    else:
+        tmpInstrument.instrument_type = instrument_type
     tmpInstrument.name = instrumentIn.name
     tmpInstrument.exchange = instrumentIn.exchange
     tmpInstrument.class_code = instrumentIn.class_code
