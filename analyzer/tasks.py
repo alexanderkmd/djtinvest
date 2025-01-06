@@ -84,6 +84,15 @@ def get_instrument_by_figi(figi: str):
     return _process_instrument(instrument_in)
 
 
+def get_instrument_by_isin(isin: str):
+    taskLogger.warning(f"Get instrument by isin {isin}")
+    ticker, board = moex_client.get_security_data_by_isin_from_moex(isin)
+    taskLogger.warning(f"{ticker} - {board}")
+    if ticker is None or board is None:
+        return None
+    return get_instrument_by_ticker(ticker, board)
+
+
 def get_instrument_by_ticker(ticker: str, class_code: str):
     taskLogger.debug(f"Get instrument by ticker {ticker}")
     instrument_in = tinkoff_client.get_instrument_by_ticker(ticker, class_code)

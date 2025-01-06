@@ -61,6 +61,41 @@ def get_index_positions(index_code: str, date: datetime = datetime.now(), second
     return []
 
 
+def get_security_data_from_moex(security: str):
+    """Получает данные о бумаге из MOEX API
+
+    Args:
+        security (str): _description_
+    """
+    # url = "https://iss.moex.com/iss/securities/VTBR.json?iss.json=extended&iss.meta=off&primary_board=1"
+    pass
+
+
+def get_security_data_by_isin_from_moex(isin: str = "RU000A105PU9"):
+    # https://iss.moex.com/iss/securities.json?q=RU000A105PU9&iss.json=extended&iss.meta=off
+
+    url = "https://iss.moex.com/iss/securities.json?q="
+    url += isin
+    url += "&iss.json=extended&iss.meta=off"  # переводим в словарь из массива и отключаем метаданные
+
+    logger.debug(url)
+
+    try:
+        response = requests.get(url, verify=False)
+        data = response.json()
+    except Exception as e:
+        logger.error(f"Error during MOEX-index-positions request: {e}")
+        return []
+
+    logger.debug(data)
+    secs = data[1]['securities']
+
+    if len(secs) == 0:
+        return None, None
+
+    return secs[0]["secid"], secs[0]["primary_boardid"]
+
+
 def get_splits_list_from_moex() -> List[Dict]:
     """Получает список прошедших сплитов/консолидаций из MOEX API
 

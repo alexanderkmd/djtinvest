@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.db.utils import IntegrityError
 from django.utils.functional import cached_property
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -191,7 +192,7 @@ class InstrumentData(models.Model):
     position_uid = models.CharField(max_length=40)
     asset_uid = models.CharField(max_length=40)
     instrument_type = models.CharField(max_length=32)
-    name = models.CharField(max_length=120)
+    name = models.CharField(max_length=200)
     exchange = models.CharField(max_length=100)
     class_code = models.CharField(max_length=32)
     lot = models.IntegerField()
@@ -334,6 +335,12 @@ class InstrumentManager(models.Manager):
         instrumentLogger.info(f"Find instrument {figi} in DB")
         return self._get_instrument(figi, "figi")
 
+    def get_instrument_by_isin(self, isin: str):
+        # идентификация инструментов в Т-Инвестициях:
+        # https://russianinvestments.github.io/investAPI/faq_identification/
+        instrumentLogger.info(f"Find instrument {isin} in DB")
+        return self._get_instrument(isin, "isin")
+
     def get_instrument_by_ticker(self, ticker: str, class_code: str):
         # идентификация инструментов в Т-Инвестициях:
         # https://russianinvestments.github.io/investAPI/faq_identification/
@@ -354,7 +361,10 @@ class InstrumentManager(models.Manager):
                 search_id += ":" + class_code
             tmpInst = self.get(idValue=search_id, idType=idType)
         except ObjectDoesNotExist:
-            instrumentLogger.info(f"Instrument {id} not found in DB - getting from API")
+            instrumentLogger.info(f"Instrument {id} by {idType} not found in DB - getting from API")
+            tmpInst = None
+        except IntegrityError as e:
+            instrumentLogger.error(f"Problem with position {idType} - {id}: {e}")
             tmpInst = None
         if tmpInst is not None:
             # Если данные из базы не устарели - то возвращаем их, чтобы лишний раз не дергать API
@@ -370,6 +380,8 @@ class InstrumentManager(models.Manager):
             instrumentData = tasks.get_instrument_by_ticker(id, class_code)
         elif idType == "uid":
             instrumentData = tasks.get_instrument_by_uid(id)
+        elif idType == "isin":
+            instrumentData = tasks.get_instrument_by_isin(id)
         return instrumentData
 
 
@@ -383,6 +395,7 @@ class Instrument(models.Model):
 
     objects = InstrumentManager()
     get_instrument = objects.get_instrument
+    get_instrument_by_isin = objects.get_instrument_by_isin
     get_instrument_by_ticker = objects.get_instrument_by_ticker
     get_instrument_by_uid = objects.get_instrument_by_uid
 
