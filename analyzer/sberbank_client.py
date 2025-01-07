@@ -269,7 +269,7 @@ def parse_money_operations(soup: BeautifulSoup, account: "models.Account",
             operation_type = "OPERATION_TYPE_DIVIDEND"
             tax_operation_type = "OPERATION_TYPE_DIVIDEND_TAX"
 
-            re_match_string = r"Дивиденды (?P<stock>.*); ISIN (?P<isin>.*); Дата Фиксации .*; Кол-во (?P<qtty>\d*); Ставка Выплаты (?P<payment>\d*); Курс конвертации (?P<rate>[\d\.]*);"
+            re_match_string = r"Дивиденды (?P<stock>.*); ISIN (?P<isin>.*); Дата Фиксации .*; Кол-во (?P<qtty>\d*); Ставка Выплаты (?P<payment>[\d\.]*); Курс конвертации (?P<rate>[\d\.]*);"
             out = re.search(re_match_string, description)
             isin = out.groupdict()['isin']
             instrument = instruments[isin]
