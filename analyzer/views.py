@@ -4,13 +4,15 @@ from datetime import datetime, timedelta, timezone
 
 from decimal import Decimal
 
+from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.urls import reverse
 from django.views import generic
 
-from .forms import TargetPortfolioForm, TargetPortfolioIndexSelectionForm, TargetPortfolioAddPositionForm
+from .forms import (SberbankReportUploadForm, TargetPortfolioForm,
+                    TargetPortfolioIndexSelectionForm, TargetPortfolioAddPositionForm)
 from .models import Account, Instrument, Operation, Position, PortfolioPosition, TargetPortfolio, TargetPortfolioValues
 from .utils import is_htmx, paginate
 from . import tasks
@@ -327,3 +329,24 @@ def TargetPositionDelete(request, position_pk: int):
 
     response = HttpResponse(status=204)
     return response
+
+
+def UploadSberbankReport(request):
+    logging.info("Request for SberBankUpload Form")
+    if request.method == "POST":
+        logging.info("POST Request for SberBankUpload Form")
+        form = SberbankReportUploadForm(request.POST, request.FILES)
+        print(form.non_field_errors())
+        print(request.FILES)
+        if form.is_valid():
+            message, error = tasks.process_sberbank_report_upload(request.FILES["reportFile"])
+            if error:
+                messages.error(request, message)
+            else:
+                messages.success(request, message)
+            return redirect("analyzer:accounts", permanent=False)
+    else:
+        form = SberbankReportUploadForm()
+    return render(request, "analyzer/sberbankUploadForm.html",
+                  context={"form": form})
+

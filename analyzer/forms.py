@@ -5,6 +5,13 @@ import logging
 from typing import List
 
 
+class SberbankReportUploadForm(forms.Form):
+    reportFile = forms.FileField()
+
+    class Meta:
+        pass
+
+
 class TargetPortfolioForm(forms.ModelForm):
 
     class Meta:

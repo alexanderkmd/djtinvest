@@ -351,15 +351,20 @@ def parse_portfolio(soup: BeautifulSoup, account: "models.Account"):
     pass
 
 
-def parse_html_report(file_name):
+def parse_html_report(file_name) -> tuple[str, bool]:
     sberLogger.info("Start Sberbank HTML report parsing")
     with open(file_name) as fp:
-        soup = BeautifulSoup(fp, "html.parser")
+        try:
+            soup = BeautifulSoup(fp, "html.parser")
+        except UnicodeDecodeError:
+            sberLogger.critical("Ошибка парсинга отчета - вероятно бинарный файл.")
+            return "Ошибка парсинга отчета - вероятно бинарный файл.", True
 
     account = parse_account(soup)
     if account is None:
         sberLogger.error("Ошибка парсинга отчета - невозможно сопоставить со счетом в базе")
-        return
+        return "Ошибка парсинга отчета - невозможно сопоставить со счетом в базе.", True
+
 
     instruments_table_position = soup.find(string=re.compile("Справочник Ценных Бумаг"))
     instruments = parse_instruments_list(instruments_table_position.find_next("table"))
@@ -374,6 +379,8 @@ def parse_html_report(file_name):
 
     portfolio_table_position = soup.find(string=re.compile("Портфель Ценных Бумаг"))
     parse_portfolio(portfolio_table_position.find_next("table"), account)
+
+    return "Отчет успешно загружен!", False
 
 
 def _put_sberbank_position(account: "models.Account", instrument: "models.InstrumentData", qtty: int):

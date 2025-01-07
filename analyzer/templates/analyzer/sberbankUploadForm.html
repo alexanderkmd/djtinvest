@@ -1,0 +1,13 @@
+<form method="post" action="{% url 'analyzer:sberbankUpload' %}" enctype="multipart/form-data">
+{% csrf_token %}
+<div class="w-128 grid grid-cols-4 gap-2 px-2">
+    <div class="col-span-3">
+        <input class="block w-full mb-5 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none"
+                id="{{ form.reportFile.auto_id }}" name="{{ form.reportFile.name }}" type="file" aria-describedby="{{ form.reportFile.name }}_help">
+        <!-- p class="mt-1 text-xs text-gray-500 dark:text-gray-300" id="{{ form.reportFile.name }}_help">HTML отчет</p -->
+    </div>
+    <div>
+        <input type="submit" value="Загрузить" class="block w-full mb-5 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"/>
+    </div>
+</div>
+</form>

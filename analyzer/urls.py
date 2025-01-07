@@ -37,4 +37,7 @@ urlpatterns = [
          name="positionDelete"),
     path("target/position/move/<int:position_pk>/<str:dir>", views.TargetPortfolioPositionItemMove,
          name="positionMove"),
+
+    path("sberbank/upload/", views.UploadSberbankReport,
+         name="sberbankUpload")
 ]

@@ -1,4 +1,5 @@
 import logging
+import tempfile
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -6,7 +7,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.utils import IntegrityError
 from . import models  # import Account, Instrument, Operation
-from . import tclient, cbrf_client, moex_client
+from . import tclient, cbrf_client, moex_client, sberbank_client
 from .classes import Quotation
 
 
@@ -264,6 +265,21 @@ def preload_splits_list_to_db():
         models.Split.objects.get_or_create(
             date=split["tradedate"], ticker=split['secid'],
             defaults={"before": split["before"], "after": split["after"]})
+
+
+def process_sberbank_report_upload(f) -> tuple[str, bool]:
+    """Загружает файл с отчетом из сбербанка и отправляет его на обработку
+
+    Args:
+        f (файл): собственно файл отчета
+    """
+    taskLogger.info("Start upload and process Sberbank Report File")
+    _, tmpFile = tempfile.mkstemp()
+    with open(tmpFile, "wb+") as dest:
+        for chunk in f.chunks():
+            dest.write(chunk)
+        taskLogger.info("Uload complete, processing")
+    return sberbank_client.parse_html_report(tmpFile)
 
 
 def target_portfolio_preload_last_prices(targetPortfolioId: int, use_cache=True):
