@@ -365,10 +365,12 @@ def parse_html_report(file_name):
     instruments = parse_instruments_list(instruments_table_position.find_next("table"))
 
     buy_sell_operations_table_position = soup.find(string=re.compile("Сделки купли/продажи ценных бумаг"))
-    parse_buy_sell_operations(buy_sell_operations_table_position.find_next("table"), account, instruments)
+    if buy_sell_operations_table_position is not None:
+        parse_buy_sell_operations(buy_sell_operations_table_position.find_next("table"), account, instruments)
 
     money_operations_table_position = soup.find(string=re.compile("Движение денежных средств за период"))
-    parse_money_operations(money_operations_table_position.find_next("table"), account, instruments)
+    if money_operations_table_position is not None:
+        parse_money_operations(money_operations_table_position.find_next("table"), account, instruments)
 
     portfolio_table_position = soup.find(string=re.compile("Портфель Ценных Бумаг"))
     parse_portfolio(portfolio_table_position.find_next("table"), account)
