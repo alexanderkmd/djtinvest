@@ -9,14 +9,14 @@ from typing import Dict
 from datetime import datetime
 from decimal import Decimal
 
-from .models import Account, Bank, Instrument, InstrumentData, Operation, Position
+from . import models
 
 sberLogger = logging.getLogger(__name__)
 sberLogger.setLevel(logging.DEBUG)  # lsettings.TASKS_LOGGING_LEVEL)
 
 
 
-def parse_account(soup: BeautifulSoup) -> Account | None:
+def parse_account(soup: BeautifulSoup) -> "models.Account | None":
     sberLogger.info("Getting account data from Sberbank HTML report")
     strings = soup.find_all(string=re.compile("Договор"))
     if len(strings) != 1:
@@ -26,7 +26,7 @@ def parse_account(soup: BeautifulSoup) -> Account | None:
     account_open_date_str = account_string_data[3][:10]
     sberLogger.debug(f"Найден счет в отчете: {account_number}, открытый '{account_open_date_str}'")
 
-    account = Account.account_by_id(account_number)
+    account = models.Account.account_by_id(account_number)
     if account is not None:
         # если счет нашелся - его и возвращаем
         sberLogger.debug(f"Счет '{account}' найден - возвращаю")
@@ -35,11 +35,11 @@ def parse_account(soup: BeautifulSoup) -> Account | None:
     account_open_date = datetime.strptime(account_open_date_str, "%d.%m.%Y")
 
     sberLogger.debug("Создаем новую запись счета...")
-    sberbank = Bank.get_sberbank()
+    sberbank = models.Bank.get_sberbank()
     if sberbank is None:
         logging.critical("Cannot find sberbank record in Banks to create Account!")
         return None
-    tmpAccount = Account()
+    tmpAccount = models.Account()
     tmpAccount.accountId = account_number
     tmpAccount.type = "ACCOUNT_TYPE_BROKER"
     tmpAccount.name = account_number
@@ -55,7 +55,7 @@ def parse_account(soup: BeautifulSoup) -> Account | None:
         return None
 
 
-def parse_instruments_list(soup: BeautifulSoup | Tag) -> Dict[str, InstrumentData]:
+def parse_instruments_list(soup: BeautifulSoup | Tag) -> "Dict[str, models.InstrumentData]":
     """Loads instruments for report to the DB
 
     Args:
@@ -80,12 +80,12 @@ def parse_instruments_list(soup: BeautifulSoup | Tag) -> Dict[str, InstrumentDat
         ticker = cells[ticker_col].string
         isin = cells[isin_col].string
         try:
-            instrument = Instrument.get_instrument_by_ticker(ticker, "TQBR")
+            instrument = models.Instrument.get_instrument_by_ticker(ticker, "TQBR")
         except Exception as e:
             sberLogger.error(f"Ошибка парсинга инструмента: {e}")
         try:
             sberLogger.info(f"Пробуем найти по ISIN {isin}")
-            instrument = Instrument.get_instrument_by_isin(isin)
+            instrument = models.Instrument.get_instrument_by_isin(isin)
             sberLogger.info(f"Успешно нашли {instrument}!")
         except Exception as e:
             sberLogger.error(f"Ошибка парсинга инструмента: {e}")
@@ -96,7 +96,8 @@ def parse_instruments_list(soup: BeautifulSoup | Tag) -> Dict[str, InstrumentDat
     return instruments
 
 
-def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments: Dict[str, InstrumentData]):
+def parse_buy_sell_operations(soup: BeautifulSoup, account: "models.Account",
+                              instruments: "Dict[str, models.InstrumentData]"):
     sberLogger.info("Start Sberbank HTML buy/sell operations parsing")
 
     operation_number_col = 13
@@ -153,11 +154,11 @@ def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments
         # 27.12.2024 13:55:57
         operation_datetime = datetime.strptime(f"{date} {time}", "%d.%m.%Y %H:%M:%S")
 
-        if Operation.objects.filter(operationId=operation_number).exists():
+        if models.Operation.objects.filter(operationId=operation_number).exists():
             sberLogger.info(f"Операция '{operation_type} {instrument_code} {date}' уже существует - пропускаю")
             continue
 
-        operation = Operation(
+        operation = models.Operation(
             operationId=operation_number,
             parentOperationId=None,
             account=account,
@@ -175,7 +176,7 @@ def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments
         operation.save()
 
         if broker_comission != 0 or market_comission != 0:
-            tax_operation = Operation(
+            tax_operation = models.Operation(
                 operationId=f"{operation_number}-tax",
                 parentOperationId=operation_number,
                 account=account,
@@ -195,7 +196,8 @@ def parse_buy_sell_operations(soup: BeautifulSoup, account: Account, instruments
     return
 
 
-def parse_money_operations(soup: BeautifulSoup, account: Account, instruments: Dict[str, InstrumentData]):
+def parse_money_operations(soup: BeautifulSoup, account: "models.Account",
+                           instruments: "Dict[str, models.InstrumentData]"):
     sberLogger.info("Start Sberbank HTML money operations parsing")
 
     date_col = 0
@@ -278,11 +280,11 @@ def parse_money_operations(soup: BeautifulSoup, account: Account, instruments: D
             operation_sum = Decimal(out.groupdict()['payment'])
             tax = debit - operation_sum
 
-        if Operation.objects.filter(operationId=operation_id).exists():
+        if models.Operation.objects.filter(operationId=operation_id).exists():
             sberLogger.info(f"Операция '{operation_type} {date}' уже существует - пропускаю")
             continue
 
-        operation = Operation(
+        operation = models.Operation(
             operationId=operation_id,
             parentOperationId=None,
             account=account,
@@ -300,7 +302,7 @@ def parse_money_operations(soup: BeautifulSoup, account: Account, instruments: D
         operation.save()
 
         if tax != Decimal(0):
-            tax_operation = Operation(
+            tax_operation = models.Operation(
                 operationId=f"{operation_id}-tax",
                 parentOperationId=operation_id,
                 account=account,
@@ -320,7 +322,7 @@ def parse_money_operations(soup: BeautifulSoup, account: Account, instruments: D
     pass
 
 
-def parse_portfolio(soup: BeautifulSoup, account: Account):
+def parse_portfolio(soup: BeautifulSoup, account: "models.Account"):
     sberLogger.info("Start Sberbank HTML report portfolio parsing")
 
     for row in soup.find_all("tr"):
@@ -339,7 +341,7 @@ def parse_portfolio(soup: BeautifulSoup, account: Account):
         end_date_qtty = cells[end_date_qtty_col].string.replace(" ", "")
         sberLogger.debug(f"'{name}', isin: {isin} количество в конце периода: {end_date_qtty}")
         try:
-            instrument = Instrument.get_instrument_by_isin(isin)
+            instrument = models.Instrument.get_instrument_by_isin(isin)
             sberLogger.debug(instrument)
         except Exception as e:
             sberLogger.warning(f"Ошибка вненсения инструмента {name}")
@@ -372,8 +374,8 @@ def parse_html_report(file_name):
     parse_portfolio(portfolio_table_position.find_next("table"), account)
 
 
-def _put_sberbank_position(account: Account, instrument: InstrumentData, qtty: int):
-    Position.objects.update_or_create(
+def _put_sberbank_position(account: "models.Account", instrument: "models.InstrumentData", qtty: int):
+    models.Position.objects.update_or_create(
         account=account,
         instrument=instrument,
         defaults={"qtty": qtty},
