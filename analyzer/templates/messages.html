@@ -1,0 +1,9 @@
+{% if messages %}
+<div class="messagesContainer">
+{% for message in messages %}
+<div class="message {{message.level_tag}}" role="alert">
+    {{ message }}
+</div>
+{% endfor %}
+</div>
+{% endif %}
