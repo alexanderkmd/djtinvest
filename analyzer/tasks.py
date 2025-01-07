@@ -363,7 +363,13 @@ def update_all_accounts():
     accounts = models.Account.objects.all()
     total_ops = 0
     first_new_op_date = datetime.now(tz=timezone.utc)
+    tinkoff_bank = models.Bank.get_tinkoff()
+    print(tinkoff_bank)
     for account in accounts:
+        if account.bankId != tinkoff_bank:
+            # парсим здесь только счета Т-Банк, остальные - пропускаем
+            continue
+
         taskLogger.info(f"Starting parsing of account {account.name} ({account.accountId})")
         last_op = models.Operation.objects.filter(account=account).order_by("-timestamp").first()
         if last_op is not None:
