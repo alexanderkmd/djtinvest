@@ -106,8 +106,8 @@ def get_instrument_by_uid(uid: str):
     return _process_instrument(instrument_in)
 
 
-def _process_instrument(instrument_in):
-    instrument = models.instrument_from_tinkoff_client(instrument_in)
+def _process_instrument(instrument_in, instrument_type=""):
+    instrument = models.instrument_from_tinkoff_client(instrument_in, instrument_type)
     try:
         tmp = models.InstrumentData.objects.get(isin=instrument.isin)
         instrument.pk = tmp.pk
