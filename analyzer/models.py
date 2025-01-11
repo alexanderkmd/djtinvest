@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from . import tasks
 from .classes import Quotation
+from .enums import OperationType
 
 accountLoggerLevel = settings.ACCOUNT_LOGGING_LEVEL
 instrumentLoggerLevel = settings.INSTRUMENT_LOGGING_LEVEL
@@ -474,6 +475,14 @@ class Operation(models.Model):
     class Meta():
         verbose_name = "Операция"
         verbose_name_plural = "Операции"
+
+    @property
+    def type_short(self) -> str:
+        return OperationType[self.type].short
+
+    @property
+    def type_description(self) -> str:
+        return OperationType[self.type].description
 
     def is_canceled(self):
         if self.state == "OPERATION_STATE_CANCELED":
