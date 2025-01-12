@@ -26,7 +26,7 @@
         </div>
     </td>
 
-    <td class="text-center">
+    <td class="text-center" value="{{position.indexTarget|floatformat:'3u' }}">
         <form id="coeff-form-{{position.pk}}" 
               hx-post="{% url 'analyzer:positionCoefficientSet' position.pk %}" 
               hx-target="#position-row-{{position.pk}}" hx-swap="outerHTML">
@@ -37,7 +37,7 @@
             value="{{position.coefficient}}">
         </form>
     </td>
-    <td class="text-center">
+    <td class="text-center" value="{{position.my_weight|floatformat:'3u' }}">
         {{position.my_weight}}
         <div class="text-2xs">
             Соответствие: {{position.index_correlation|floatformat:"2"}}
@@ -75,7 +75,7 @@
         </span>
     </td>
     <!-- td class="text-right">{{position.bought_price|floatformat:"2"}}</td-->
-    <td class="text-right px-5">{{position.percent_complete}}%</td>
+    <td class="text-right px-5" value="{{position.percent_complete|floatformat:'u' }}">{{position.percent_complete}}%</td>
     <td>{{position.instrument.sector}}</td>
     <td><!-- див на акцию --></td>
     <td><!-- див год --></td>

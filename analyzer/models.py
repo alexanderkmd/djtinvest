@@ -800,6 +800,6 @@ class TargetPortfolioValues(models.Model):
 
     def percent_complete(self) -> int:
         if self.to_buy_qtty() == 0:
-            return 100
+            return 9999
         result = round(self.bought_qtty() / self.to_buy_qtty() * 100)
         return result
