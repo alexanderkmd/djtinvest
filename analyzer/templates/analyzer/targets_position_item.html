@@ -1,6 +1,7 @@
 {% load instrument_tags %}
+{% load target_item_tags %}
 
-<tr class="hover:bg-gray-300" id="position-row-{{position.pk}}" 
+<tr class="hover:bg-gray-300 {% complete_background_color position.percent_complete %}" id="position-row-{{position.pk}}" 
     hx-get="{% url 'analyzer:targetPositionItem' position.pk %}"  
     hx-swap="outerHTML" hx-trigger="tableReload from:body delay:{{position.order_number}}00ms">
     <td class="py-2 px-l-2 sticky left-0 bg-white bg-opacity-100">
