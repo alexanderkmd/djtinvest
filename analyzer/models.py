@@ -12,7 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from . import tasks
 from .classes import Quotation
-from .enums import OperationType
+from .enums import OperationType, tax_operations_name
 
 accountLoggerLevel = settings.ACCOUNT_LOGGING_LEVEL
 instrumentLoggerLevel = settings.INSTRUMENT_LOGGING_LEVEL
@@ -509,6 +509,28 @@ class Operation(models.Model):
         if self.instrument is not None:
             return self.instrument.ticker
         return ""
+
+    def tax_comission_operations(self) -> "Dict[str,list[Operation]]":
+        """Возвращает список связанных операций удержанных налогов или комиссий
+
+        Returns:
+            Dict[str,list[Operation]]: Список операций налогов (taxes) и комиссий (comissions)
+        """
+        out = {}
+
+        by_parentId = Operation.objects.filter(parentOperationId=self.operationId).all()
+        out["comissions"] = by_parentId
+
+        by_date_type = Operation.objects.filter(
+            account=self.account,
+            instrument=self.instrument,
+            timestamp__year=self.timestamp.year,
+            timestamp__month=self.timestamp.month,
+            timestamp__day=self.timestamp.day,
+            type__in=tax_operations_name
+        ).all()
+        out["taxes"] = by_date_type
+        return out
 
 
 def operation_from_tinkoff_client(operation, accountId):

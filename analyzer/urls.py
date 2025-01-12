@@ -15,6 +15,7 @@ urlpatterns = [
     path("dividends/year/<int:year>", views.devidends_for_year_list, name="dividends-year"),
 
     path("operations", views.operations_list, name="operations"),
+    path("operations/<int:year>/<int:month>/<int:day>/", views.OperationsByDateView.as_view(), name="operations"),
 
     path("positions", views.PositionsView.as_view(), name="positions"),
     path("position/<str:figi>", views.PositionDetailView, name="positionDetail"),

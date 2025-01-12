@@ -4,7 +4,15 @@
 <h1 class="text-4xl px-5 py-6">Список операций</h1>
 
 <div id="opertionsListContainer" class="min-w-full text-sm">
-{% include 'analyzer/operations_list.html' %}
+    {% if operations_is_empty %}
+        <div class="px-5 w-full text-xl font-bold">Список операций пуст</div>
+    {% else %}
+    <div hx-get="{% url 'analyzer:operations' first_operation_date|date:'Y' first_operation_date|date:'m' first_operation_date|date:'d' %}" 
+         hx-trigger="load" hx-swap="outerHTML">
+         &nbsp;<br/>
+    </div>
+    {% endif %}
+
 </div>
 
 &nbsp;

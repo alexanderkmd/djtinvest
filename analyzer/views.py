@@ -17,6 +17,8 @@ from .models import Account, Instrument, Operation, Position, PortfolioPosition,
 from .utils import is_htmx, paginate
 from . import tasks
 
+from .enums import comission_operations_name, tax_operations_name
+
 
 def index_view(request):
     template = loader.get_template("analyzer/index.html")
@@ -87,24 +89,56 @@ def devidends_for_year_list(request, year, account_pk=0):
 
 
 def operations_list(request):
-    operations = paginate(request, Operation.objects.order_by("-timestamp").all().prefetch_related("instrument"),
+    first_operation = (Operation.objects.order_by("-timestamp").
+                       exclude(type__in=tax_operations_name).exclude(type__in=comission_operations_name).
+                       first())
+    context = {}
+
+    if first_operation is None:
+        context['operations_is_empty'] = True
+    else:
+        context["first_operation_date"] = first_operation.timestamp
+
+    return render(request, "analyzer/operations.html", context)
+
+
+def operations_list_old(request):
+    """Устаревшая - использовался пагинатор по количеству, не по дате"""
+    operations = paginate(request,
+                          Operation.objects.order_by("-timestamp").
+                          exclude(type__in=tax_operations_name).exclude(type__in=comission_operations_name).
+                          all().prefetch_related("instrument"),
                           limit=50)
     context = {
-        "operations": operations
+        "operations": operations,
+        "has_next": operations.has_next,
+        "next_page_number": operations.next_page_number,
     }
     if is_htmx(request):
         return render(request, "analyzer/operations_list.html", context)
     return render(request, "analyzer/operations.html", context)
 
 
-class OperationsView(generic.ListView):
-    model = Operation
-    template_name = "analyzer/operations.html"
+class OperationsByDateView(generic.DayArchiveView):
+    """Список операций по дате, сразу исключает налоги и комиссии по операциям.
+    Последние отображаются как поля в соответствующих операциях.
+
+    Args:
+        year, month, day (int): элементы даты для предоставления
+
+    """
+    date_field = "timestamp"
+    allow_future = False
+    allow_empty = False
+    month_format = "%m"
+    template_name = "analyzer/operations_list_date.html"
     context_object_name = "operations"
 
     def get_queryset(self):
-        """Return operations"""
-        return Operation.objects.order_by("-timestamp").prefetch_related("instrument")  # [:20]
+        queryset = (Operation.objects.order_by("-timestamp").
+                    exclude(type__in=tax_operations_name).exclude(type__in=comission_operations_name).
+                    all().prefetch_related("instrument"))
+        return queryset
 
 
 class PositionsView(generic.ListView):

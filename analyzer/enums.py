@@ -88,3 +88,16 @@ class OperationType(enum.Enum):
     @property
     def short(self):
         return self._short_
+
+
+# Типы операций по взыманию налога по проведенной операции
+tax_operations_name = [
+    OperationType.OPERATION_TYPE_DIVIDEND_TAX.name,
+    OperationType.OPERATION_TYPE_DIVIDEND_TAX_PROGRESSIVE.name,
+    OperationType.OPERATION_TYPE_BOND_TAX.name,
+    OperationType.OPERATION_TYPE_BOND_TAX_PROGRESSIVE.name
+]
+
+comission_operations_name = [
+    OperationType.OPERATION_TYPE_BROKER_FEE.name,
+]

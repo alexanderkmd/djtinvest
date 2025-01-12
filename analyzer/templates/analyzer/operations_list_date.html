@@ -1,0 +1,50 @@
+{% load instrument_tags %}
+
+<hr>
+<div class="bg-gray-100 w-full"><h3 class="py-2 px-2 text-m font-bold">{{ day }}</h3></div>
+{% for operation in operations %}
+
+<div class="flex items-center min-h-14 px-2 py-3
+{% if operation.is_canceled %}line-through{% endif %}
+">
+    <div class="w-12 px-2 text-center text-s">
+        {{operation.timestamp|date:'H:i' }}
+    </div>
+    
+    <div class="min-w-80 px-2">
+        {% if operation.figi != "" %}
+            {% instrument_badge operation.instrument False False %}
+        {% endif %}
+    </div>
+
+    <div class="w-64 px-2 text-xs text-center">
+        {{ operation.type_description }}
+        <br/><div class="font-bold">{{ operation.account.name }}</div>
+    </div> 
+
+    <div class="px-3 min-w-64 text-right">
+        {% if operation.quantity > 0 %}
+            {{operation.quantity}} шт.<br/>
+            <span class="text-gray-500 text-s"> по {{operation.price|floatformat:"2"}} {{operation.currency}}</span>
+        {% else %}
+        &nbsp;
+        {% endif %}
+    </div> 
+    <div class="px-3 min-w-60 text-center">
+        {{operation.payment_rub|floatformat:"2"}} rub<br/>
+        <span class="text-gray-500">
+            {% for com_op in operation.tax_comission_operations.comissions %}
+                Комиссия: {{com_op.payment|floatformat:"2"}} {{com_op.currency}}
+            {% endfor %}
+            {% for tax_op in operation.tax_comission_operations.taxes %}
+                Налог: {{tax_op.payment|floatformat:"2"}} {{tax_op.currency}}
+            {% endfor %}
+        </span>
+    </div> 
+</div>
+
+<hr/>
+{% endfor %}
+
+<div {% if previous_day %} hx-get="{% url 'analyzer:operations' previous_day|date:'Y' previous_day|date:'m' previous_day|date:'d' %}" hx-trigger="revealed"
+hx-swap="outerHTML" {% endif %}>&nbsp;<br/></div>
