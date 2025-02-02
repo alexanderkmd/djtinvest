@@ -351,6 +351,42 @@ def target_portfolio_total_value(targetPortfolioId: int, use_cache=True):
     return total_value
 
 
+def target_portfolio_to_buy_simple(target_portfolio_pk: int, cash_sum: int):
+    """Расчет, что можно купить в портфель по простой схеме -
+    количество лотов, что можно купить на переданную сумму, без балансировки.
+
+    Args:
+        target_portfolio_pk (int): pk портфолио для расчета
+        cash_sum (int): сумма для расчета возможных покупок
+
+    Returns:
+        _type_: _description_
+    """
+
+    targetPositions = models.TargetPortfolioValues.objects.filter(
+        targetPortfolio__pk=target_portfolio_pk
+        ).select_related(
+            "targetPortfolio"
+        ).prefetch_related("instrument").order_by("order_number")
+
+    out = []
+    for item in targetPositions:
+        if item.my_weight() == Decimal(0):
+            continue
+        lot = item.instrument.lot
+        price = item.current_price()
+        lot_price = lot*price
+        if lot_price < cash_sum:
+            qtty_lot = int(cash_sum/lot_price)
+            qtty_items = qtty_lot*lot
+            out.append({
+                "position": item,
+                "qtty_lot": qtty_lot,
+                "qtty_items": qtty_items,
+            })
+    return out
+
+
 def update_all_accounts():
     """Запрашивает информацию по последним сделкам всех счетов, обновляет портфолио
     """

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.urls import reverse
@@ -211,6 +211,30 @@ def TargetPortfolioEditView(request, portfolio_pk):
 
     return HttpResponseRedirect(reverse("analyzer:targetDetails",
                                         kwargs={"portfolio_pk": portfolio_pk}))
+
+
+def TargetPortfolioToBuy(request: HttpRequest, portfolio_pk: int = 0,
+                         cash_sum: int = 0,
+                         calculateMethod: str = "simple"):
+    if request.method == "POST":
+        print(request.POST)
+        portfolio_pk = int(request.POST.get("portfolio_pk", 0))
+        cash_sum = int(request.POST.get("cash_sum", 0))
+        calculateMethod = request.POST.get("calculateMethod", "simple")
+
+    target_portfolio = TargetPortfolio.objects.get(pk=portfolio_pk)
+
+    out = []
+    if calculateMethod == "simple":
+        out = tasks.target_portfolio_to_buy_simple(portfolio_pk, cash_sum)
+
+    context = {
+        "portfolio": target_portfolio,
+        "items": out,
+        "calculateMethod": calculateMethod,
+    }
+    template = loader.get_template("analyzer/targets_to_buy.html")
+    return HttpResponse(template.render(context, request))
 
 
 def TargetPortfolioUpdateIndex(request, portfolio_pk):

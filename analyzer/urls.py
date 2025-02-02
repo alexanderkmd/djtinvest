@@ -24,6 +24,11 @@ urlpatterns = [
     path("targets", views.TargetsView, name="targets"),
     path("targets/<int:portfolio_pk>", views.TargetsDetailView, name="targetDetails"),
     path("target/edit/<int:portfolio_pk>", views.TargetPortfolioEditView, name="targetEdit"),
+
+    path("target/tobuy/", views.TargetPortfolioToBuy, name="targetIndexToBuy"),
+    path("target/tobuy/<int:portfolio_pk>/<int:cash_sum>/<str:calculateMethod>", views.TargetPortfolioToBuy,
+         name="targetIndexToBuy"),
+
     path("target/updateIndex/<int:portfolio_pk>", views.TargetPortfolioUpdateIndex, name="targetIndexUpdate"),
     path("target/positions/<int:portfolio_pk>", views.TargetPortfolioPositions, name="targetPositions"),
     path("target/position/<int:position_pk>", views.TargetPortfolioPositionItem,

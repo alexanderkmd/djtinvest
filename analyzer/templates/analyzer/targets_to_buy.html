@@ -1,0 +1,169 @@
+{% include "base.html" %}
+
+{% load instrument_tags %}
+{% load target_item_tags %}
+
+{% block content %}
+<h1 class="text-4xl px-5 py-6">Целевой портфель "{{ portfolio.name }}"</h1>
+
+<div class="content-center min-h-8 px-6">
+    {% include "analyzer/targets_portfolio_data.html" %}
+</div>
+
+
+<div id="targetsContainer" class="min-w-full flex">
+  <table id="targetsTable">
+  <thead>
+    <tr>
+      <th>&nbsp;</th>
+      <th>Можно купить</th>
+      <th onclick="sortTableNumeric(2)">Выполнено</th>
+    </tr>
+  </thead>
+  {% for item in items %}
+  <tr>
+    <td>{% instrument_badge item.position.instrument True True %}</td>
+    <td class="text-xl px-3">
+      {{ item.qtty_lot }}/{{ item.qtty_items }}
+    </td>
+    <td class="px-5 text-right {% complete_background_color item.position.percent_complete %}"
+        value="{{ item.position.percent_complete|floatformat:'u' }}">
+      {{ item.position.percent_complete }} %
+    </td>
+    <td class="text-right px-2">
+      <span class="inTableMainText">{{ item.position.current_price|floatformat:"2"}}</span>
+      <br/><span class="text-2xs">(Лот: {{ item.position.instrument.lot}})</span>
+    </td>
+    <td>
+      Куплено: {{ item.position.bought_qtty }}<br/>
+      Купить: {{ item.position.to_buy_qtty }}
+    </td>
+    <td>
+      Куплено: {{ item.position.bought_price|floatformat:"2" }}<br/>
+      Купить: {{ item.position.to_buy_price|floatformat:"2" }}
+    </td>
+    
+    
+  </tr>
+  {% endfor %}
+  </table>
+</div>
+
+
+<script>
+
+    // https://www.w3schools.com/howto/howto_js_sort_table.asp
+    function sortTable(n) {
+      var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+      table = document.getElementById("targetsTable");
+      switching = true;
+      // Set the sorting direction to ascending:
+      dir = "asc";
+      /* Make a loop that will continue until
+      no switching has been done: */
+      while (switching) {
+        // Start by saying: no switching is done:
+        switching = false;
+        rows = table.rows;
+        /* Loop through all table rows (except the
+        first, which contains table headers): */
+        for (i = 1; i < (rows.length - 1); i++) {
+          // Start by saying there should be no switching:
+          shouldSwitch = false;
+          /* Get the two elements you want to compare,
+          one from current row and one from the next: */
+          x = rows[i].getElementsByTagName("TD")[n];
+          y = rows[i + 1].getElementsByTagName("TD")[n];
+          /* Check if the two rows should switch place,
+          based on the direction, asc or desc: */
+          if (dir == "asc") {
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+              // If so, mark as a switch and break the loop:
+              shouldSwitch = true;
+              break;
+            }
+          } else if (dir == "desc") {
+            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+              // If so, mark as a switch and break the loop:
+              shouldSwitch = true;
+              break;
+            }
+          }
+        }
+        if (shouldSwitch) {
+          /* If a switch has been marked, make the switch
+          and mark that a switch has been done: */
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          // Each time a switch is done, increase this count by 1:
+          switchcount ++;
+        } else {
+          /* If no switching has been done AND the direction is "asc",
+          set the direction to "desc" and run the while loop again. */
+          if (switchcount == 0 && dir == "asc") {
+            dir = "desc";
+            switching = true;
+          }
+        }
+      }
+    }
+    function sortTableNumeric(n) {
+      var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+      table = document.getElementById("targetsTable");
+      switching = true;
+      // Set the sorting direction to ascending:
+      dir = "asc";
+      /* Make a loop that will continue until
+      no switching has been done: */
+      while (switching) {
+        // Start by saying: no switching is done:
+        switching = false;
+        rows = table.rows;
+        /* Loop through all table rows (except the
+        first, which contains table headers): */
+        for (i = 1; i < (rows.length - 1); i++) {
+          // Start by saying there should be no switching:
+          shouldSwitch = false;
+          /* Get the two elements you want to compare,
+          one from current row and one from the next: */
+          x = rows[i].getElementsByTagName("TD")[n].getAttribute("value");
+          console.log(x)
+          y = rows[i + 1].getElementsByTagName("TD")[n].getAttribute("value");
+          /* Check if the two rows should switch place,
+          based on the direction, asc or desc: */
+          if (dir == "asc") {
+            if (Number.parseFloat(x) > Number.parseFloat(y)) {
+              shouldSwitch = true;
+              break;
+            }
+          } else if (dir == "desc") {
+            if (Number.parseFloat(x) < Number.parseFloat(y)) {
+              shouldSwitch = true;
+              break;
+            }
+          }
+        }
+        if (shouldSwitch) {
+          /* If a switch has been marked, make the switch
+          and mark that a switch has been done: */
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          // Each time a switch is done, increase this count by 1:
+          switchcount ++;
+        } else {
+          /* If no switching has been done AND the direction is "asc",
+          set the direction to "desc" and run the while loop again. */
+          if (switchcount == 0 && dir == "asc") {
+            dir = "desc";
+            switching = true;
+          }
+        }
+      }
+    }
+
+    // sort the table on page loading complete
+    sortTableNumeric(2)
+</script>
+
+&nbsp;
+{% endblock %}

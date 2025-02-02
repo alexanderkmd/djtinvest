@@ -1,0 +1,44 @@
+
+{% extends 'modal.html' %}
+
+{% block modalId %}{{ modalIdT }}{% endblock %}
+{% block modalCloseId %}{{ modalIdT }}{% endblock %}
+
+{% block modalTitle %}Что можно купить?{% endblock %}
+                    
+{% block modalContent %}
+
+<form class="max-w-sm mx-auto"
+    target="_blank"
+    method="post"
+    action="{% url 'analyzer:targetIndexToBuy' %}" >
+
+    {% csrf_token %}
+    <input type="hidden" name="portfolio_pk" value="{{ portfolio.pk }}" />
+    <div class="mb-5">
+        <label for="calculateMethod">Тип расчета</label>
+        <select id="calculateMethod" name="calculateMethod" disabled="true">
+            <option value="simple">Без балансировки</option>
+            <option value="balance">С учетом балансировки</option>
+        </select>
+    </div>
+
+    <div class="mb-5">
+        <label for="cash_sum">Сумма</label>
+        <input id="cash_sum" name="cash_sum" type="number" class="p-2 text-xs" value="1000"/>
+    </div>
+
+    <div class="mb-5">
+        <input type="submit" value="Расчитать" />
+    </div>
+</form>
+
+
+{% endblock %}
+
+{% block modalFooter %}
+<ul class="modalCaption">
+    <li><b>Без балансировки</b> - выводит позиции, которые можно купить на указанную сумму, без учета балансировки портфеля. Удобно при малых суммах.</li>
+    <li><b>С учетом балансировки</b> - расчитывает закупку, с учетом весов портфеля для сохранения балансировки.</li>
+</ul>
+{% endblock %}

@@ -27,6 +27,14 @@
             class="btn primary">Обновить состав индекса</button> 
     {% include 'analyzer/target_index_modal_form.html' %}
     {% endwith %}
+    |
+    
+    {% with modalIdT="targetToBuyModalContainer" %}
+    <button data-modal-target="{{modalIdT}}" data-modal-toggle="{{modalIdT}}"
+            class="btn primary">Что можно купить?</button>
+    {% include 'analyzer/target_to_buy_modal.html' %}
+    {% endwith %}
+
 </div>
 
 <div id="targetsContainer" class="min-w-full flex flex-row">
