@@ -483,7 +483,12 @@ class Operation(models.Model):
 
     @property
     def type_description(self) -> str:
-        return OperationType[self.type].description
+        try:
+            return OperationType[self.type].description
+        except KeyError:
+            message = f"Незивестный тип операции '{self.type}'"
+            logging.error(message)
+            return message
 
     def is_canceled(self):
         if self.state == "OPERATION_STATE_CANCELED":
