@@ -279,6 +279,14 @@ def parse_money_operations(soup: BeautifulSoup, account: "models.Account",
             operation_id += "-dividend-" + isin
             operation_sum = Decimal(out.groupdict()['payment'])
             tax = debit - operation_sum
+        elif "Списание налога" in description:
+            sberLogger.debug(f"Tax operation on {date}")
+            operation_type = "OPERATION_TYPE_TAX"
+            operation_id += "-tax"
+            operation_sum = -abs(credit)
+        else:
+            message = f"Неизвестная операция для разбора {date} - '{description}'"
+            sberLogger.error(message)
 
         if models.Operation.objects.filter(operationId=operation_id).exists():
             sberLogger.info(f"Операция '{operation_type} {date}' уже существует - пропускаю")
