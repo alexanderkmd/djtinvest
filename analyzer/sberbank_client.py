@@ -264,6 +264,11 @@ def parse_money_operations(soup: BeautifulSoup, account: "models.Account",
                 instrument_type = instrument.instrument_type
 
                 operation_id += "-coupon" + bond.replace(" ", "")
+        elif "Списание д/с" in description:
+            sberLogger.debug(f"Output operation on {date}")
+            operation_type = "OPERATION_TYPE_OUTPUT"
+            operation_id += "-output"
+            operation_sum = -abs(credit)
         elif description_start == "Дивиденды":
             sberLogger.debug(f"Dividend operation on {date}")
             operation_type = "OPERATION_TYPE_DIVIDEND"
